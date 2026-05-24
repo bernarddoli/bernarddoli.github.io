@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DOLI B. Bernard — Ingénieur Cybersécurité</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+  <!-- Bootstrap Icons (CDN uniquement) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Font Awesome (CDN uniquement) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- Mes CSS -->
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+
+<body>
+
+  <!-- ===================== HERO ===================== -->
+  <section id="accueil">
+
+    <div class="avatar-wrapper">
+      <!--
+        Placez votre photo dans le dossier images/
+        et remplacez "photo.jpg" par le vrai nom du fichier.
+      -->
+      <img src="images/photo.png" alt="Photo de Diallo Karim" />
+    </div>
+
+    <p class="hero-title">Ingénieur Cybersécurité | Pentester | Investigateur numérique</p>
+    <p class="hero-name">DOLI B. Bernard</p>
+
+    <p class="hero-bio">
+      Je suis <strong>DOLI B. Bernard</strong>, ingénieur spécialisé en cybersécurité, test d'intrusion et 
+      investigation numérique. Je suis passionné par la protection des systèmes d'information. je mets mes compétences 
+      au service de la sécurisation des environnements numériques.
+    </p>
+
+    <span class="badge-dispo">
+      <i class="fas fa-circle" style="color:#4ade80;font-size:.6rem;margin-right:.35rem;"></i>
+      Freelance — Disponible pour travailler
+    </span>
+
+  </section>
+
+  <!-- ===================== NAV STICKY ===================== -->
+  <nav id="navbar">
+    <ul>
+      <li><a href="#accueil">
+        <i class="fas fa-home"></i>
+        <span class="nav-label">Accueil</span>
+      </a></li>
+      <li><a href="#competences">
+        <i class="fas fa-code"></i>
+        <span class="nav-label">Compétences</span>
+      </a></li>
+      <li><a href="#projets">
+        <i class="fas fa-folder-open"></i>
+        <span class="nav-label">Projets</span>
+      </a></li>
+      <li><a href="#parcours">
+        <i class="fas fa-briefcase"></i>
+        <span class="nav-label">Parcours</span>
+      </a></li>
+      <li><a href="#contact">
+        <i class="fas fa-envelope"></i>
+        <span class="nav-label">Contact</span>
+      </a></li>
+    </ul>
+  </nav>
+
+  <!-- ===================== COMPÉTENCES ===================== -->
+  <section id="competences" class="section-block">
+    <div class="container">
+
+      <div class="title-box">
+        <h2>Mes Compétences</h2>
+        <div class="line-mf"></div>
+      </div>
+
+      <div class="grid-3">
+        
+        <div class="service-box">
+          <!-- <div class="ico-circle"><i class="bi bi-bug"></i></div> -->
+          <div class="ico-circle"><i class="bi bi-shield-exclamation"></i></div>
+          <h3 class="s-title">Tests d'Intrusion</h3>
+          <p class="s-description">
+            Audit de sécurité web et réseau - Exploitation de failles - Rédaction de rapports techniques -
+            Maîtrise des méthodologies OWASP, PTES et des outils (Metasploit, Burp Suite, Nmap).
+          </p>
+        </div>
+
+        <div class="service-box">
+          <!-- <div class="ico-circle"><i class="bi bi-tools"></i></div> -->
+          <div class="ico-circle"><i class="bi bi-server"></i></div>
+          <h3 class="s-title">Déploiement de Solutions</h3>
+          <p class="s-description">
+            Installation et configuration de solutions de supervision, sécurité, gestion des mots de passe, etc - 
+            Intégration dans des infrastructures existantes et documentation technique des installations.
+          </p>
+        </div>
+
+        <div class="service-box">
+          <div class="ico-circle"><i class="bi bi-braces-asterisk"></i></div>
+          <h3 class="s-title">Programmation</h3>
+          <p class="s-description">
+            Bases solides en Python - Scripts d'automatisation (BASH, POWERSHELL).
+          </p>
+        </div>
+
+        <div class="service-box">
+          <div class="ico-circle"><i class="bi bi-terminal"></i></div>
+          <h3 class="s-title">Systèmes</h3>
+          <p class="s-description">
+            Administration Linux et Windows - Active Directory - Virtualisation - gestion des droits - diagnostic et résolution de pannes.
+          </p>
+        </div>
+
+        <div class="service-box">
+          <div class="ico-circle"><i class="bi bi-hdd-network"></i></div>
+          <h3 class="s-title">Réseau</h3>
+          <p class="s-description">
+            Surveillance et analyse - Identification des vulnérabilités - Garantie d'un fonctionnement fluide et sécurisé des réseaux.
+          </p>
+        </div>
+
+      </div><!-- /grid-3 -->
+
+      <!-- Outils & Technologies -->
+      <div class="title-box" style="margin-top:3.5rem;">
+        <h2 style="font-size:1.5rem;">Outils &amp; Technologies</h2>
+        <div class="line-mf"></div>
+      </div>
+      <div class="tags-wrapper">
+        <span class="tag-pill tag-dark">Kali Linux</span>
+        <span class="tag-pill tag-danger">Metasploit</span>
+        <span class="tag-pill tag-warning">Burp Suite</span>
+        <span class="tag-pill tag-info">Wireshark</span>
+        <span class="tag-pill tag-primary">Nmap</span>
+        <span class="tag-pill tag-success">Autopsy</span>
+        <span class="tag-pill tag-success">Volatility</span>
+        <span class="tag-pill tag-danger">OSINT</span>
+        <span class="tag-pill tag-warning">BASH</span>
+        <span class="tag-pill tag-dark">POWERSHELL</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== PROJETS ===================== -->
+  <section id="projets" class="section-block alt">
+    <div class="container">
+
+      <div class="title-box">
+        <h2>Mes Projets</h2>
+        <p class="subtitle-a">Voici mes projets les plus récents.</p>
+        <div class="line-mf"></div>
+      </div>
+
+      <div class="grid-3">
+      <!-- projet1   -->
+      <div class="work-box">
+        <div class="work-img">
+          <img src="images/mdp.png" alt="Scanner de vulnérabilités" />
+        </div>
+        <div class="work-content">
+          <h3 class="w-title">Casseur de Mots de Passe</h3>
+          <a href="projets/projet1.html" class="btn-projet">
+            <i class="bi bi-plus-circle"></i> Voir projet
+          </a>
+        </div>
+      </div>
+
+      <!-- projet2 -->
+      <div class="work-box">
+        <div class="work-img">
+          <img src="images/mdp.png" alt="Scanner de vulnérabilités" />
+        </div>
+        <div class="work-content">
+          <h3 class="w-title">Casseur de Mots de Passe</h3>
+          <a href="projets/projet1.html" class="btn-projet">
+            <i class="bi bi-plus-circle"></i> Voir projet
+          </a>
+        </div>
+      </div>
+
+      <!-- projet3 -->
+      <div class="work-box">
+        <div class="work-img">
+          <img src="images/mdp.png" alt="Scanner de vulnérabilités" />
+        </div>
+        <div class="work-content">
+          <h3 class="w-title">Casseur de Mots de Passe</h3>
+          <a href="projets/projet1.html" class="btn-projet">
+            <i class="bi bi-plus-circle"></i> Voir projet
+          </a>
+        </div>
+      </div>
+
+      <!-- projet3 -->
+      <div class="work-box">
+        <div class="work-img">
+          <img src="images/mdp.png" alt="Scanner de vulnérabilités" />
+        </div>
+        <div class="work-content">
+          <h3 class="w-title">Casseur de Mots de Passe</h3>
+          <a href="projets/projet1.html" class="btn-projet">
+            <i class="bi bi-plus-circle"></i> Voir projet
+          </a>
+        </div>
+      </div>
+
+      </div><!-- /grid-3 -->
+
+      <div style="text-align:center;">
+        <a href="projets.html" class="btn-more">
+          <i class="bi bi-plus-circle"></i> Voir tous les projets
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== PARCOURS ===================== -->
+  <section id="parcours" class="section-block">
+    <div class="container">
+
+      <div class="title-box">
+        <h2>Mon Parcours</h2>
+        <p class="subtitle-a">Diplômes, certifications et expériences.</p>
+        <div class="line-mf"></div>
+      </div>
+
+      <ul class="timeline">
+
+        <li>
+          <h3>2024-2026</h3>
+          <h4 class="subheading">Master en Réseaux & Systèmes, spécialité Cybersécurité — E.S.I</h4>
+          <p>
+            Titulaire d'une Licence en Réseaux et Systèmes, j'ai poursuivi en Master avec une spécialisation en Cybersécurité. 
+            Cette formation m'a permis d'approfondir mes techniques de sécurisation des systèmes, de test d'intrusion et d'investigation 
+            numérique aboutissant à l'obtention de mon diplôme d'ingénieur de conception.
+          </p>
+        </li>
+
+        <li>
+          <h3>2020 – 2023</h3>
+          <h4 class="subheading">Licence Réseaux & Systèmes — E.S.I</h4>
+          <p>
+            Admis à l'École Supérieure d'Informatique après concours, j'ai suivi deux années de tronc commun avant de me spécialiser en 
+            Réseaux et Systèmes, domaine qui nourrit ma passion pour la cybersécurité.
+          </p>
+        </li>
+
+        <li>
+          <h3>2020</h3>
+          <h4 class="subheading">Baccalauréat Scientifique — Série D</h4>
+          <p>
+            Baccalauréat scientifique série D obtenu au Lycée Provincial Mollo SANOU de Bobo-Dioulasso.
+          </p>
+        </li>
+
+      </ul>
+
+    </div>
+  </section>
+
+  <!-- ===================== CONTACT ===================== -->
+  <section id="contact" class="section-block alt">
+    <div class="container" style="text-align:center; max-width:600px;">
+      <div class="title-box">
+        <h2>Contact</h2>
+        <div class="line-mf"></div>
+      </div>
+      <p style="color:var(--muted); margin-bottom:1rem;">
+        Vous avez un projet ou une opportunité ? N'hésitez pas à me contacter.
+      </p>
+      <a href="mailto:bebernarddoli@gmail.com" class="btn-more">
+        <i class="fas fa-envelope"></i> Envoyer un message
+      </a>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer>
+    <div class="footer-icon">
+      <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" alt="cybersécurité icon"/>
+    </div>
+    <p class="footer-main">
+      Conçu &amp; développé par <span>DOLI B. Bernard</span> — 
+      Ingénieur Cybersécurité | Pentester | Investigateur numérique
+    </p>
+    <p class="footer-sub">Sécuriser aujourd'hui, protéger demain</p>
+  </footer>
+
+  <!-- ===================== JS : active nav on scroll ===================== -->
+  <script>
+    const sections = document.querySelectorAll('section[id], nav[id]');
+    const navLinks = document.querySelectorAll('#navbar ul li a');
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(a => a.classList.remove('active'));
+          const active = document.querySelector(`#navbar a[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+
+    document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+  </script>
+
+</body>
+</html>

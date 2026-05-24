@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Casseur de Mots de Passe — Diallo Karim</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/projet.css"/>
+</head>
+<body>
+
+<!-- ======= NAV ======= -->
+<nav id="navbar">
+  <ul>
+    <li><a href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+    <li><a href="../index.html#competences"><i class="fas fa-code"></i> Compétences</a></li>
+    <li><a href="../index.html#projets"><i class="fas fa-folder-open"></i> Projets</a></li>
+    <li><a href="../index.html#parcours"><i class="fas fa-briefcase"></i> Parcours</a></li>
+    <li><a href="../index.html#contact"><i class="fas fa-envelope"></i> Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ======= HERO DARK ======= -->
+<header class="projet-hero">
+  <div class="inner">
+    <p class="projet-breadcrumb">
+      <a href="../index.html">Accueil</a>
+      <span>›</span>
+      <a href="../index.html#projets">Projets</a>
+      <span>›</span>
+      Casseur de Mots de Passe
+    </p>
+    <h1>Casseur de Mots de Passe</h1>
+    <div class="projet-meta">
+      <span class="projet-tag">Hacking Éthique</span>
+      <span class="projet-tag">Python</span>
+      <span class="projet-tag">Cryptographie</span>
+    </div>
+    <p class="projet-intro">
+      Outil de test de robustesse des mots de passe développé en Python, 
+      combinant attaque par dictionnaire, brute force et règles de mutation. 
+      Réalisé dans un cadre strictement éthique et pédagogique.
+    </p>
+  </div>
+  <!-- Image de couverture collée au bas du hero -->
+  <div class="projet-cover-wrap">
+    <img src="../images/mdp.png" alt="Casseur de mots de passe" />
+  </div>
+</header>
+
+<!-- ======= CORPS : sommaire + article ======= -->
+<div class="projet-body">
+
+  <!-- SOMMAIRE GAUCHE -->
+  <aside class="projet-toc">
+    <p class="projet-toc-title">Sommaire</p>
+    <ul id="toc-list">
+      <li><a href="#introduction">Introduction</a></li>
+      <li><a href="#contexte">Contexte & Objectifs</a></li>
+      <li><a href="#fonctionnement">Fonctionnement</a></li>
+      <li class="toc-sub"><a href="#dictionnaire">Attaque par dictionnaire</a></li>
+      <li class="toc-sub"><a href="#bruteforce">Brute force</a></li>
+      <li class="toc-sub"><a href="#mutation">Règles de mutation</a></li>
+      <li><a href="#code">Extraits de code</a></li>
+      <li><a href="#resultats">Résultats & Tests</a></li>
+      <li><a href="#limites">Limites & Éthique</a></li>
+      <li><a href="#conclusion">Conclusion</a></li>
+    </ul>
+  </aside>
+
+  <!-- CONTENU ARTICLE -->
+  <article class="projet-content">
+
+    <h2 id="introduction">Introduction</h2>
+    <p>
+      Ce projet a été développé dans le cadre de mon apprentissage du hacking éthique.
+      L'objectif est de comprendre <strong>comment les attaquants tentent de retrouver 
+      des mots de passe</strong>, afin de mieux défendre les systèmes contre ces techniques.
+    </p>
+    <div class="warn-box">
+      <strong>⚠ Avertissement :</strong> Cet outil est réalisé dans un cadre légal et 
+      pédagogique uniquement. Tout test doit être effectué sur des systèmes vous appartenant 
+      ou pour lesquels vous disposez d'une autorisation écrite explicite.
+    </div>
+
+    <hr class="sep" />
+
+    <h2 id="contexte">Contexte & Objectifs</h2>
+    <p>
+      Dans le cadre de ma formation en cybersécurité à l'ESI, j'ai souhaité mettre en pratique 
+      les notions de cryptographie et d'attaques sur les mots de passe. Les objectifs principaux étaient :
+    </p>
+    <ul>
+      <li>Comprendre les différentes méthodes d'attaque sur les mots de passe</li>
+      <li>Implémenter un outil fonctionnel en Python</li>
+      <li>Mesurer la robustesse de différents types de mots de passe</li>
+      <li>Sensibiliser à l'importance des bonnes pratiques de sécurité</li>
+    </ul>
+
+    <hr class="sep" />
+
+    <h2 id="fonctionnement">Fonctionnement</h2>
+    <p>
+      L'outil est structuré en trois modules principaux, chacun correspondant 
+      à une stratégie d'attaque différente.
+    </p>
+
+    <h3 id="dictionnaire">Attaque par dictionnaire</h3>
+    <p>
+      L'attaque par dictionnaire teste une liste de mots de passe courants 
+      (noms, dates, mots simples). C'est la méthode la plus rapide et la plus efficace 
+      contre les mots de passe faibles. Elle repose sur des wordlists comme 
+      <code>rockyou.txt</code> qui contiennent des millions d'entrées.
+    </p>
+
+    <h3 id="bruteforce">Brute force</h3>
+    <p>
+      Le brute force génère toutes les combinaisons possibles de caractères jusqu'à 
+      une longueur définie. Efficace mais exponentiellement lent au-delà de 6-7 caractères 
+      sans ressources GPU.
+    </p>
+
+    <h3 id="mutation">Règles de mutation</h3>
+    <p>
+      Le module de mutation applique des transformations courantes sur les mots du dictionnaire : 
+      substitutions (<code>a→@</code>, <code>e→3</code>, <code>o→0</code>), ajout de chiffres 
+      en fin de mot, mise en majuscule de la première lettre, etc.
+    </p>
+
+    <hr class="sep" />
+
+    <h2 id="code">Extraits de code</h2>
+    <p>Structure du projet :</p>
+<pre><code>casseur-mdp/
+├── main.py              ← Point d'entrée principal
+├── modules/
+│   ├── dictionnaire.py  ← Attaque par dictionnaire
+│   ├── bruteforce.py    ← Génération de combinaisons
+│   └── mutation.py      ← Règles de transformation
+├── wordlists/
+│   └── rockyou_mini.txt ← Liste de mots de passe courants
+└── README.md</code></pre>
+
+    <p>Module d'attaque par dictionnaire :</p>
+<pre><code><span class="c-keyword">import</span> hashlib
+
+<span class="c-keyword">def</span> <span class="c-func">attaque_dictionnaire</span>(hash_cible, fichier_dico):
+    <span class="c-string">"""Teste chaque mot du dictionnaire contre le hash cible."""</span>
+    <span class="c-keyword">with</span> <span class="c-func">open</span>(fichier_dico, <span class="c-string">'r'</span>, encoding=<span class="c-string">'utf-8'</span>, errors=<span class="c-string">'ignore'</span>) <span class="c-keyword">as</span> f:
+        <span class="c-keyword">for</span> ligne <span class="c-keyword">in</span> f:
+            mot = ligne.<span class="c-func">strip</span>()
+            hash_test = hashlib.<span class="c-func">md5</span>(mot.<span class="c-func">encode</span>()).<span class="c-func">hexdigest</span>()
+            <span class="c-keyword">if</span> hash_test == hash_cible:
+                <span class="c-keyword">return</span> mot  <span class="c-comment"># Mot de passe trouvé !</span>
+    <span class="c-keyword">return</span> <span class="c-keyword">None</span>  <span class="c-comment"># Non trouvé dans le dictionnaire</span></code></pre>
+
+    <p>Module brute force avec <code>itertools</code> :</p>
+<pre><code><span class="c-keyword">import</span> itertools
+<span class="c-keyword">import</span> string
+
+<span class="c-keyword">def</span> <span class="c-func">brute_force</span>(hash_cible, longueur_max=<span class="c-number">6</span>):
+    <span class="c-string">"""Génère toutes les combinaisons jusqu'à longueur_max."""</span>
+    charset = string.ascii_lowercase + string.digits
+    <span class="c-keyword">for</span> longueur <span class="c-keyword">in</span> <span class="c-func">range</span>(<span class="c-number">1</span>, longueur_max + <span class="c-number">1</span>):
+        <span class="c-keyword">for</span> combo <span class="c-keyword">in</span> itertools.<span class="c-func">product</span>(charset, repeat=longueur):
+            mot = <span class="c-string">''</span>.<span class="c-func">join</span>(combo)
+            <span class="c-keyword">if</span> hashlib.<span class="c-func">md5</span>(mot.<span class="c-func">encode</span>()).<span class="c-func">hexdigest</span>() == hash_cible:
+                <span class="c-keyword">return</span> mot
+    <span class="c-keyword">return</span> <span class="c-keyword">None</span></code></pre>
+
+    <hr class="sep" />
+
+    <h2 id="resultats">Résultats & Tests</h2>
+    <p>
+      Les tests ont été effectués sur une machine virtuelle Kali Linux, 
+      avec une liste de hashes <code>MD5</code> générés localement à partir de mots de passe connus.
+    </p>
+    <ul>
+      <li><strong>Mots de passe simples (&lt; 6 car.) :</strong> retrouvés en moins de 2 secondes</li>
+      <li><strong>Mots du dictionnaire :</strong> 95 % retrouvés en moins d'une minute</li>
+      <li><strong>Avec mutations :</strong> +12 % de taux de succès supplémentaire</li>
+      <li><strong>Mots complexes (&gt; 10 car. mixtes) :</strong> non retrouvés (temps prohibitif sans GPU)</li>
+    </ul>
+    <div class="info-box">
+      <strong>Conclusion des tests :</strong> Un mot de passe d'au moins 12 caractères combinant 
+      majuscules, minuscules, chiffres et symboles résiste efficacement à toutes les attaques testées. 
+      L'usage d'un gestionnaire comme <strong>KeePass</strong> est fortement recommandé.
+    </div>
+
+    <hr class="sep" />
+
+    <h2 id="limites">Limites & Éthique</h2>
+    <p>Ce projet présente plusieurs limitations importantes :</p>
+    <ul>
+      <li>Performance limitée en Python pur — pas d'accélération GPU</li>
+      <li>Fonctionne uniquement sur des hashes non salés (<code>MD5</code>, <code>SHA1</code>)</li>
+      <li>Wordlists limitées en taille pour des raisons d'espace disque</li>
+      <li>Usage <strong>strictement réservé</strong> aux tests sur ses propres systèmes</li>
+    </ul>
+
+    <hr class="sep" />
+
+    <h2 id="conclusion">Conclusion</h2>
+    <p>
+      Ce projet m'a permis de comprendre concrètement les mécanismes d'attaque sur les mots de passe 
+      et l'importance de politiques de sécurité rigoureuses. Il illustre parfaitement pourquoi 
+      l'utilisation d'un gestionnaire de mots de passe comme <strong>KeePass</strong> et 
+      l'adoption d'une politique de mots de passe forts sont indispensables dans tout 
+      environnement professionnel ou personnel.
+    </p>
+    <p>
+      Ce projet s'inscrit dans ma démarche globale d'apprentissage du pentest et du hacking éthique, 
+      en combinant compréhension théorique des attaques et implémentation pratique des outils.
+    </p>
+
+    <!-- Navigation bas de page -->
+    <div class="projet-footer-nav">
+      <a href="../index.html#projets" class="btn-back">
+        <i class="bi bi-arrow-left"></i> Retour aux projets
+      </a>
+      <a href="projet2.html" class="btn-next">
+        Projet suivant <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+  </article>
+</div>
+
+<!-- ======= FOOTER ======= -->
+<footer>
+  <div class="footer-icon">
+    <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" alt="cybersécurité"/>
+  </div>
+  <p class="footer-main">
+    Conçu &amp; développé par <span>Karim Diallo</span> — 
+    Ingénieur Cybersécurité | Pentester | Investigateur numérique
+  </p>
+  <p class="footer-sub">Sécuriser aujourd'hui, protéger demain</p>
+</footer>
+
+<!-- Sommaire actif au scroll -->
+<script>
+  const links = document.querySelectorAll('#toc-list a');
+  const ids = Array.from(links).map(a => a.getAttribute('href').slice(1));
+  const sections = ids.map(id => document.getElementById(id)).filter(Boolean);
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        const a = document.querySelector(`#toc-list a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+
+  sections.forEach(s => obs.observe(s));
+</script>
+
+</body>
+</html>
