@@ -33,23 +33,23 @@
       <span>›</span>
       <a href="../index.html#projets">Projets</a>
       <span>›</span>
-      Casseur de Mots de Passe
+      Synchronisation des données
     </p>
-    <h1>Casseur de Mots de Passe</h1>
+    <h1>Synchronisation des données</h1>
     <div class="projet-meta">
-      <span class="projet-tag">Hacking Éthique</span>
-      <span class="projet-tag">Python</span>
-      <span class="projet-tag">Cryptographie</span>
+      <span class="projet-tag">Harmonisation des données</span>
+      <span class="projet-tag">systèmes</span>
     </div>
     <p class="projet-intro">
-      Outil de test de robustesse des mots de passe développé en Python, 
-      combinant attaque par dictionnaire, brute force et règles de mutation. 
-      Réalisé dans un cadre strictement éthique et pédagogique.
+      Une solution de synchronisation fluide adaptées aux défis spécifiques, modification après modification. 
+      Cette solution donne aux entreprises les moyens de prospérer : synchronisation fluide des fichiers, 
+      détection intelligente des modifications, le tout conçu pour garantir une cohérence durable des données sur 
+      le long terme.
     </p>
   </div>
   <!-- Image de couverture collée au bas du hero -->
   <div class="projet-cover-wrap">
-    <img src="../images/mdp.png" alt="Casseur de mots de passe" />
+    <img src="../images/synchronisation.png" alt="Casseur de mots de passe" />
   </div>
 </header>
 
@@ -78,74 +78,73 @@
 
     <h2 id="introduction">Introduction</h2>
     <p>
-      Ce projet a été développé dans le cadre de mon apprentissage du hacking éthique.
-      L'objectif est de comprendre <strong>comment les attaquants tentent de retrouver 
-      des mots de passe</strong>, afin de mieux défendre les systèmes contre ces techniques.
+      Cette solution basée sur <strong>Lsyncd</strong>, conçue pour assurer une mise en miroir fiable 
+      des fichiers. Elle intègre une <strong>synchronisation en temps réel</strong> ainsi qu’une <strong>automatisation
+      intelligente</strong>, garantissant la cohérence, la <strong>sécurité</strong> et la <strong>sauvegarde 
+      ainsi que la réplication automatisées</strong> de vos données.
     </p>
-    <div class="warn-box">
+    <!-- <div class="warn-box">
       <strong>⚠ Avertissement :</strong> Cet outil est réalisé dans un cadre légal et 
       pédagogique uniquement. Tout test doit être effectué sur des systèmes vous appartenant 
       ou pour lesquels vous disposez d'une autorisation écrite explicite.
-    </div>
+    </div> -->
 
     <hr class="sep" />
 
     <h2 id="contexte">Contexte & Objectifs</h2>
     <p>
-      Dans le cadre de ma formation en cybersécurité à l'ESI, j'ai souhaité mettre en pratique 
-      les notions de cryptographie et d'attaques sur les mots de passe. Les objectifs principaux étaient :
+      Dans le cadre de ma formation, j’ai souhaité mettre en pratique des mécanismes de synchronisation et de 
+      disponibilité des données en environnement Linux. Pour cela, j’ai mis en œuvre une solution basée sur Lsyncd
+      (Live Syncing Daemon), permettant d’assurer la réplication automatique de fichiers entre plusieurs systèmes. Les 
+      objectifs principaux étaient :
     </p>
     <ul>
-      <li>Comprendre les différentes méthodes d'attaque sur les mots de passe</li>
-      <li>Implémenter un outil fonctionnel en Python</li>
-      <li>Mesurer la robustesse de différents types de mots de passe</li>
-      <li>Sensibiliser à l'importance des bonnes pratiques de sécurité</li>
+      <li>Comprendre le fonctionnement de la synchronisation en temps réel</li>
+      <li>Mettre en place une solution automatisée de mise en miroir de données avec Lsyncd</li>
+      <li>Garantir la cohérence et l’intégrité des fichiers entre un serveur source et un serveur distant</li>
+      <li>Renforcer la disponibilité des données dans un contexte de continuité de service</li>
+      <li>Appliquer de bonnes pratiques de sécurisation des transferts (via SSH, permissions, etc.)</li>
     </ul>
 
     <hr class="sep" />
 
     <h2 id="fonctionnement">Fonctionnement</h2>
     <p>
-      L'outil est structuré en trois modules principaux, chacun correspondant 
-      à une stratégie d'attaque différente.
+      Lsyncd (Live Syncing Daemon) est un outil de synchronisation de fichiers en temps réel qui repose sur un
+      mécanisme de surveillance du système de fichiers.
     </p>
 
-    <h3 id="dictionnaire">Attaque par dictionnaire</h3>
-    <p>
-      L'attaque par dictionnaire teste une liste de mots de passe courants 
-      (noms, dates, mots simples). C'est la méthode la plus rapide et la plus efficace 
-      contre les mots de passe faibles. Elle repose sur des wordlists comme 
-      <code>rockyou.txt</code> qui contiennent des millions d'entrées.
-    </p>
+    <ul>
+      <li>Lsyncd surveille en continu un répertoire source grâce à <strong>inotify</strong> (événements système Linux)</li>
+      <li>Lorsqu’un fichier est créé, modifié ou supprimé, un événement est détecté</li>
+      <li>Lsyncd déclenche ensuite une commande de synchronisation (souvent via rsync)</li>
+      <li>Les fichiers sont alors répliqués vers un serveur distant ou un autre répertoire local</li>
+    </ul>
 
-    <h3 id="bruteforce">Brute force</h3>
+    <h3 id="mutation">Architecture de la solution</h3>
     <p>
-      Le brute force génère toutes les combinaisons possibles de caractères jusqu'à 
-      une longueur définie. Efficace mais exponentiellement lent au-delà de 6-7 caractères 
-      sans ressources GPU.
+      Structure pour une synchronisation mono-directionnelle (Serveur1 vers serveur2)
     </p>
-
-    <h3 id="mutation">Règles de mutation</h3>
-    <p>
-      Le module de mutation applique des transformations courantes sur les mots du dictionnaire : 
-      substitutions (<code>a→@</code>, <code>e→3</code>, <code>o→0</code>), ajout de chiffres 
-      en fin de mot, mise en majuscule de la première lettre, etc.
-    </p>
+    <pre><code>
+  Serveur 1 (192.168.100.225)          Serveur 2 (192.168.100.226)
+  ┌-------------------------┐           ┌-------------------------┐
+  │  /home/user1/           │           │  /home/user2/           │
+  │                         │           │                         │
+  │  lsyncd                 │           │                         │
+  │  └─ inotify détecte     │           │                         │
+  │     les changements     │----rsync->│  fichiers synchronisés  │
+  │                         │     SSH   │  en temps réel          │
+  │  clé: /root/.ssh/id_sync│           │                         │
+  └-------------------------┘           └-------------------------┘
+</code></pre>
 
     <hr class="sep" />
 
-    <h2 id="code">Extraits de code</h2>
-    <p>Structure du projet :</p>
-<pre><code>casseur-mdp/
-├── main.py              ← Point d'entrée principal
-├── modules/
-│   ├── dictionnaire.py  ← Attaque par dictionnaire
-│   ├── bruteforce.py    ← Génération de combinaisons
-│   └── mutation.py      ← Règles de transformation
-├── wordlists/
-│   └── rockyou_mini.txt ← Liste de mots de passe courants
-└── README.md</code></pre>
-
+    <h2 id="code">Implementation technique</h2>
+    <p>Structure pour une synchronisation mono-directionnelle (Serveur1 vers serveur2) </p>
+    <h3 id="prerequis">Prérequis sur les deux serveurs</h3> 
+    <p>Sur Serveur 1 (192.168.100.225) et Serveur 2 (192.168.100.226) :</p> 
+    </p> 
     <p>Module d'attaque par dictionnaire :</p>
 <pre><code><span class="c-keyword">import</span> hashlib
 
