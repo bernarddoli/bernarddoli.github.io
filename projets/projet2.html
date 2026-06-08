@@ -25,7 +25,7 @@
   </ul>
 </nav>
 
-<!-- ======= HERO ======= -->
+<!-- ======= HERO DARK ======= -->
 <header class="projet-hero">
   <div class="inner">
     <p class="projet-breadcrumb">
@@ -35,22 +35,21 @@
       <span>›</span>
       Synchronisation des données
     </p>
-    <h1>Synchronisation des données avec Lsyncd</h1>
+    <h1>Synchronisation des données</h1>
     <div class="projet-meta">
-      <span class="projet-tag">Linux</span>
-      <span class="projet-tag">Lsyncd / Rsync</span>
-      <span class="projet-tag">SSH</span>
-      <span class="projet-tag">Administration système</span>
+      <span class="projet-tag">Harmonisation des données</span>
+      <span class="projet-tag">systèmes</span>
     </div>
     <p class="projet-intro">
-      Mise en œuvre d'une solution de réplication automatique de fichiers en temps réel entre
-      serveurs Linux, s'appuyant sur <strong>Lsyncd</strong>, <strong>rsync</strong> et un tunnel
-      <strong>SSH sans mot de passe</strong>. Le tout conçu pour garantir la cohérence des données,
-      la continuité de service et la sécurité des transferts, modification après modification.
+      Une solution de synchronisation fluide adaptées aux défis spécifiques, modification après modification. 
+      Cette solution donne aux entreprises les moyens de prospérer : synchronisation fluide des fichiers, 
+      détection intelligente des modifications, le tout conçu pour garantir une cohérence durable des données sur 
+      le long terme.
     </p>
   </div>
+  <!-- Image de couverture collée au bas du hero -->
   <div class="projet-cover-wrap">
-    <img src="../images/synchronisation.png" alt="Synchronisation des données avec Lsyncd" />
+    <img src="../images/synchronisation.png" alt="Casseur de mots de passe" />
   </div>
 </header>
 
@@ -62,17 +61,14 @@
     <p class="projet-toc-title">Sommaire</p>
     <ul id="toc-list">
       <li><a href="#introduction">Introduction</a></li>
-      <li><a href="#contexte">Contexte &amp; Objectifs</a></li>
-      <li><a href="#architecture">Architecture</a></li>
-      <li><a href="#implementation">Implémentation</a></li>
-      <li class="toc-sub"><a href="#prerequis">1 — Prérequis</a></li>
-      <li class="toc-sub"><a href="#cle-ssh">2 — Clé SSH</a></li>
-      <li class="toc-sub"><a href="#repertoires">3 — Répertoires</a></li>
-      <li class="toc-sub"><a href="#test-rsync">4 — Test rsync</a></li>
-      <li class="toc-sub"><a href="#config-lsyncd">5 — Configuration Lsyncd</a></li>
-      <li class="toc-sub"><a href="#demarrage">6 — Démarrage</a></li>
-      <li><a href="#cas-avances">Cas d'usage avancés</a></li>
-      <li><a href="#resultats">Résultats &amp; Tests</a></li>
+      <li><a href="#contexte">Contexte & Objectifs</a></li>
+      <li><a href="#fonctionnement">Fonctionnement</a></li>
+      <li class="toc-sub"><a href="#dictionnaire">Attaque par dictionnaire</a></li>
+      <li class="toc-sub"><a href="#bruteforce">Brute force</a></li>
+      <li class="toc-sub"><a href="#mutation">Règles de mutation</a></li>
+      <li><a href="#code">Extraits de code</a></li>
+      <li><a href="#resultats">Résultats & Tests</a></li>
+      <li><a href="#limites">Limites & Éthique</a></li>
       <li><a href="#conclusion">Conclusion</a></li>
     </ul>
   </aside>
@@ -80,364 +76,366 @@
   <!-- CONTENU ARTICLE -->
   <article class="projet-content">
 
-    <!-- ── INTRODUCTION ── -->
     <h2 id="introduction">Introduction</h2>
     <p>
-      Ce projet met en œuvre une solution de synchronisation de fichiers en temps réel entre deux
-      serveurs Linux. Elle repose sur <strong>Lsyncd</strong> (<em>Live Syncing Daemon</em>), un
-      démon qui surveille en continu les modifications du système de fichiers via
-      <strong>inotify</strong> et déclenche automatiquement une synchronisation par
-      <strong>rsync</strong> à travers un tunnel SSH sécurisé.
+      Cette solution basée sur <strong>Lsyncd</strong>, conçue pour assurer une mise en miroir fiable 
+      des fichiers. Elle intègre une <strong>synchronisation en temps réel</strong> ainsi qu’une <strong>automatisation
+      intelligente</strong>, garantissant la cohérence, la <strong>sécurité</strong> et la <strong>sauvegarde 
+      ainsi que la réplication automatisées</strong> de vos données.
     </p>
-    <p>
-      L'objectif est de maintenir en permanence une copie cohérente et à jour d'un ou plusieurs
-      répertoires sur un serveur distant, sans intervention manuelle.
-    </p>
+    <!-- <div class="warn-box">
+      <strong>⚠ Avertissement :</strong> Cet outil est réalisé dans un cadre légal et 
+      pédagogique uniquement. Tout test doit être effectué sur des systèmes vous appartenant 
+      ou pour lesquels vous disposez d'une autorisation écrite explicite.
+    </div> -->
 
     <hr class="sep" />
 
-    <!-- ── CONTEXTE ── -->
-    <h2 id="contexte">Contexte &amp; Objectifs</h2>
+    <h2 id="contexte">Contexte & Objectifs</h2>
     <p>
-      Dans le cadre de ma formation en administration système, j'ai souhaité expérimenter des
-      mécanismes de haute disponibilité des données sur Linux. Les objectifs du projet :
+      Dans le cadre de ma formation, j’ai souhaité mettre en pratique des mécanismes de synchronisation et de 
+      disponibilité des données en environnement Linux. Pour cela, j’ai mis en œuvre une solution basée sur Lsyncd
+      (Live Syncing Daemon), permettant d’assurer la réplication automatique de fichiers entre plusieurs systèmes. Les 
+      objectifs principaux étaient :
     </p>
     <ul>
-      <li>Comprendre le fonctionnement de la synchronisation en temps réel via <strong>inotify</strong></li>
-      <li>Déployer une solution automatisée de mise en miroir avec <strong>Lsyncd</strong></li>
-      <li>Garantir la cohérence et l'intégrité des fichiers entre un serveur source et un serveur distant</li>
-      <li>Sécuriser les transferts SSH avec une clé dédiée <strong>sans passphrase</strong></li>
-      <li>Explorer des architectures avancées : une source vers plusieurs cibles, plusieurs sources vers une cible</li>
+      <li>Comprendre le fonctionnement de la synchronisation en temps réel</li>
+      <li>Mettre en place une solution automatisée de mise en miroir de données avec Lsyncd</li>
+      <li>Garantir la cohérence et l’intégrité des fichiers entre un serveur source et un serveur distant</li>
+      <li>Renforcer la disponibilité des données dans un contexte de continuité de service</li>
+      <li>Appliquer de bonnes pratiques de sécurisation des transferts (via SSH, permissions, etc.)</li>
     </ul>
 
     <hr class="sep" />
 
-    <!-- ── ARCHITECTURE ── -->
-    <h2 id="architecture">Architecture</h2>
+    <h2 id="fonctionnement">Fonctionnement</h2>
     <p>
-      Synchronisation mono-directionnelle entre deux serveurs sur le même réseau local.
-      Dès qu'un fichier est créé, modifié ou supprimé dans le répertoire source, Lsyncd le détecte
-      via inotify et déclenche un rsync vers la destination via SSH.
+      Lsyncd (Live Syncing Daemon) est un outil de synchronisation de fichiers en temps réel qui repose sur un
+      mécanisme de surveillance du système de fichiers.
     </p>
-<pre><code>
+
+    <ul>
+      <li>Lsyncd surveille en continu un répertoire source grâce à <strong>inotify</strong> (événements système Linux)</li>
+      <li>Lorsqu’un fichier est créé, modifié ou supprimé, un événement est détecté</li>
+      <li>Lsyncd déclenche ensuite une commande de synchronisation (souvent via rsync)</li>
+      <li>Les fichiers sont alors répliqués vers un serveur distant ou un autre répertoire local</li>
+    </ul>
+
+    <h3 id="mutation">Architecture de la solution</h3>
+    <p>
+      Structure pour une synchronisation mono-directionnelle (Serveur1 vers serveur2)
+    </p>
+    <pre><code>
   Serveur 1 (192.168.100.225)          Serveur 2 (192.168.100.226)
-  ┌─────────────────────────┐           ┌─────────────────────────┐
+  ┌-------------------------┐           ┌-------------------------┐
   │  /home/user1/           │           │  /home/user2/           │
   │                         │           │                         │
   │  lsyncd                 │           │                         │
-  │  └─ inotify surveille   │──rsync──▶ │  fichiers répliqués     │
-  │     les changements     │    SSH    │  en temps réel          │
-  │                         │           │                         │
+  │  └─ inotify détecte     │           │                         │
+  │     les changements     │----rsync->│  fichiers synchronisés  │
+  │                         │     SSH   │  en temps réel          │
   │  clé: /root/.ssh/id_sync│           │                         │
-  └─────────────────────────┘           └─────────────────────────┘
+  └-------------------------┘           └-------------------------┘
 </code></pre>
 
     <hr class="sep" />
 
-    <!-- ── IMPLEMENTATION ── -->
-    <h2 id="implementation">Implémentation technique</h2>
+    <h2 id="code">Implementation technique</h2>
+    <p>Structure pour une synchronisation mono-directionnelle (Serveur1 vers serveur2) </p>
+    <h3 id="prerequis">Prérequis sur les deux serveurs</h3> 
+    <p>Sur Serveur1 (192.168.100.225) et Serveur2 (192.168.100.226), nous allons installé lsyncd avec les permissions root</p> 
+    <p></p>
+<pre><code><span class="c-keyword">apt</span> update && <span class="c-keyword">apt</span> upgrade -y
+<span class="c-keyword">apt install rsync</span> lsyncd -y
+<span class="c-comment"># mise à jour du système et installations</span></code></pre>
 
-    <!-- 1 - Prérequis -->
-    <h3 id="prerequis">1 — Prérequis sur les deux serveurs</h3>
-    <p>
-      Sur les deux machines (Serveur1 et Serveur2), mettre à jour le système et installer
-      <code>rsync</code> ainsi que <code>lsyncd</code> avec les droits root :
+    <h3 id="authentification">Authentification SSH sans mot de passe</h3> 
+    <p>Sur le Serveur source (Server1), généré une clé SSH. Cette clé sera utilise afin d'assurer une 
+      synchronisation sécurisée. Nous n'utiliserons pas de passphrase. Le passphrase nécessitera la presence 
+      d'un utilisateur pendant l’établissement de la connexion distante avant la synchronisation.
     </p>
-<pre><code><span class="c-keyword">apt</span> update && apt upgrade -y
-<span class="c-keyword">apt install</span> rsync lsyncd -y</code></pre>
+<pre><code><span class="c-keyword">root@SRV-SYNC01#</span> ssh-keygen -t ed25519 -f /root/.ssh/id_sync -C "lsyncd-sync"
+<span class="c-comment"># -t : Spécifie le type d'algorithme cryptographique à utiliser.<span>
+<span class="c-comment"># -f : Définit le chemin et nom du fichier de sortie.</span>
+<span class="c-comment"># -C : Ajoute un commentaire à la clé publique. Une étiquette descriptive.<span></code></pre>
 
-    <!-- 2 - Clé SSH -->
-    <h3 id="cle-ssh">2 — Authentification SSH sans mot de passe</h3>
-    <p>
-      Lsyncd doit pouvoir se connecter au serveur distant sans intervention humaine. On génère une
-      clé SSH dédiée <em>sans passphrase</em> sur le <strong>Serveur1</strong> :
-    </p>
-<pre><code><span class="c-keyword">root@SRV1#</span> ssh-keygen -t ed25519 -f /root/.ssh/id_sync -C "lsyncd-sync"
-<span class="c-comment"># -t ed25519  : algorithme moderne, clé courte et robuste</span>
-<span class="c-comment"># -f          : chemin de la clé générée (privée + publique)</span>
-<span class="c-comment"># -C          : commentaire descriptif visible dans authorized_keys</span></code></pre>
+  <p>A present, nous allons copié la clé publique (de Server1) sur le serveur de destination (Server2)</p>
+  <p>Mais avant cela, il faut se rassurer que la connexion SSH par mot de passe est activée sur le Serveur 2
+    et que l'utilisateur <code>root</code> est autorisé à se connecter via SSH.
+    Connectez-vous sur le Server2 et modifié le fichier <code>/etc/ssh/sshd_config</code>, cherche et modifie les lignes
+    <code>PermitRootLogin</code> et <code>PasswordAuthentication</code>.
+  </p>
+<pre><code><span class="c-keyword">nano /etc/ssh/sshd_config</span>
+<span class="c-comment">PermitRootLogin yes          # autoriser root à se connecter</span> 
+<span class="c-comment">PasswordAuthentication yes   # autoriser l'auth par mot de passe</span>
+<span class="c-comment"># Puis redémarre SSH : systemctl restart sshd </span></code></pre>
 
-    <p>
-      Avant de copier la clé, s'assurer que l'authentification par mot de passe est activée sur
-      <strong>Serveur2</strong> (nécessaire uniquement pour cette étape initiale). Éditer
-      <code>/etc/ssh/sshd_config</code> sur Serveur2 :
-    </p>
-<pre><code>PermitRootLogin yes         <span class="c-comment"># autoriser root à se connecter via SSH</span>
-PasswordAuthentication yes  <span class="c-comment"># autoriser l'auth par mot de passe (temporaire)</span>
+<p>Après modification, nous effectuons finalement la copie. sur Server1 nous allons tapez cette commande : </p> 
+<pre><code><span class="c-keyword">ssh-copy-id -i /root/.ssh/id_sync.pub root@192.168.100.226</span></code></pre>
+<p>
+  Sur le Server2, nous allons afficher le fichier <code>authorized_keys</code>. en utilisant la commande
+  <code>cat /root/.ssh/authorized_keys</code>.
+</p>
 
-<span class="c-comment"># Redémarrer SSH pour appliquer les changements :</span>
-<span class="c-keyword">systemctl</span> restart sshd</code></pre>
+<h3 id="conectivite">Test de connectivé entre Server1 vers Server2</h3>
+<p>Sur Server1 (192.168.100.225), nous allons tenter une connexion ssh vers le Server2 avec l'utilisateur root</p>
+<pre><code><span class="c-keyword">ssh -i /root/.ssh/id_sync root@192.168.100.226 "echo connexion OK"</span></code></pre>
+<p>La sortie: <code>connexion OK</code>  sans qu'on ne demande un mot de passe confirme que la clé est bien installée.</p>
 
-    <div class="warn-box">
-      <strong>⚠ Bonne pratique :</strong> une fois la clé copiée et testée, repasser
-      <code>PasswordAuthentication no</code> sur Serveur2. Laisser l'authentification par mot de
-      passe active en production expose le serveur aux attaques par force brute.
-    </div>
+<div class="warn-box">
+  <strong>⚠ Avertissement :</strong> autoriser une connexion distante via l'utilisateur peut avoir des
+  consequence dangereux. Pour pallier a cela on peut faire une copie manuel depuis le Serveur 2 dans <code>/root/.ssh</code>.
+</div>
 
-    <p>Depuis <strong>Serveur1</strong>, copier la clé publique vers Serveur2 :</p>
-<pre><code><span class="c-keyword">ssh-copy-id</span> -i /root/.ssh/id_sync.pub root@192.168.100.226</code></pre>
-
-    <p>
-      Vérifier la présence de la clé sur Serveur2 :
-      <code>cat /root/.ssh/authorized_keys</code>
-    </p>
-
-    <p>Tester la connexion sans mot de passe depuis Serveur1 :</p>
-<pre><code><span class="c-keyword">ssh</span> -i /root/.ssh/id_sync root@192.168.100.226 "echo connexion OK"
-<span class="c-comment"># Résultat attendu : "connexion OK" sans aucune demande de mot de passe</span></code></pre>
-
-    <!-- 3 - Répertoires -->
-    <h3 id="repertoires">3 — Créer les répertoires</h3>
-    <p>Sur <strong>Serveur1</strong>, créer les répertoires sources à surveiller :</p>
+<h3 id="répertoire">Repertoires de synchronisation</h3>
+<p>Sur le Sur Server1, nous allons creer le(s) repertoire(s) source que nous voulions synchroniser sur le server2 au cas où 
+  ce(s) repertoire(s) n'existe(nt) pas. Dans notre cas, creons <code>demo1</code> et <code>demo2</code> </p>
 <pre><code><span class="c-keyword">mkdir</span> -p /home/user1/demo1
-<span class="c-keyword">mkdir</span> -p /home/user1/demo2</code></pre>
-
-    <p>Sur <strong>Serveur2</strong>, créer les répertoires de destination :</p>
+<span class="c-keyword">mkdir</span> -p /home/user1/demo2</span></code></pre>
+<p>Sur Server2, nous allons cette fois-ci creer le(s) repertoire(s) de destination qui vous recevoir 
+  les donnees du server1. (<code>rep-sync1</code>  et <code>rep-sync2</code>)
+</p>
 <pre><code><span class="c-keyword">mkdir</span> -p /home/user2/rep-sync1
-<span class="c-keyword">mkdir</span> -p /home/user2/rep-sync2</code></pre>
+<span class="c-keyword">mkdir</span> -p /home/user2/rep-sync2</span></code></pre>
 
-    <!-- 4 - Test rsync -->
-    <h3 id="test-rsync">4 — Test manuel de rsync</h3>
-    <p>
-      Avant de configurer Lsyncd, valider que rsync fonctionne correctement entre les deux serveurs :
-    </p>
-<pre><code><span class="c-comment"># Créer du contenu de test sur Serveur1</span>
-<span class="c-keyword">echo</span> "HELLO WORLD" > /home/user1/demo1/test.txt
-
-<span class="c-comment"># Synchronisation manuelle vers Serveur2</span>
+<h3 id="test manuel">Test de synchronisation manuel</h3> 
+<p>Avant de configurer lsyncd, nous allons vérifier que rsync fonctionne bien sur les deux servers. 
+  Sur Serveur 1, nous allons creer du contenu et tester la synchronisation.
+</p>
+<pre><code><span class="c-comment"># Creation de contenu</span>
+<span class="c-keyword">touch</span> /home/user1/demo1/fichier.txt
+<span class="c-keyword">touch</span> /home/user1/demo1/fichier.txt
+<span class="c-keyword">echo</span> "HELLO WORLD" > /home/user1/demo1/fichier.txt
+<span class="c-keyword">touch</span> "SECRET TEXTE" > /home/user1/demo1/fichier.txt
+<span class="c-comment"></span>
+<span class="c-comment"># synchronisation manuel</span>
 <span class="c-keyword">rsync</span> -avz --delete \
     -e <span class="c-func">"ssh -i /root/.ssh/id_sync"</span> \
     /home/user1/demo1/ \
-    root@192.168.100.226:/home/user2/rep-sync1/
+    root@192.168.100.226:/home/user2/rep-sync1/</span>
 
-<span class="c-comment"># -a  : mode archive (préserve permissions, timestamps, liens symboliques)</span>
-<span class="c-comment"># -v  : verbeux (affiche les fichiers transférés)</span>
-<span class="c-comment"># -z  : compression des données pendant le transfert</span>
-<span class="c-comment"># --delete : supprime sur la cible les fichiers absents de la source</span>
-<span class="c-comment"># -e  : spécifie le tunnel SSH avec la clé dédiée</span></code></pre>
+<span class="c-comment"># -a Mode archive (permissions, timestamps, récursif)</span>
+<span class="c-comment"># -v Verbeux (logs)</span>
+<span class="c-comment"># -z Compression pendant le transfert</span>
+<span class="c-comment"># -e Spécifie le tunnel SSH avec la clé dédiée</span></code></pre>
+<p>Les fichiers doivent se transférer sans erreur. Les repertoires <code>/home/user2/rep-sync1</code> et 
+  <code>/home/user2/rep-sync1</code> doivent avoir le meme contenu due a synchronisation.
+</p>
 
-    <p>
-      Le fichier <code>test.txt</code> doit apparaître dans <code>/home/user2/rep-sync1/</code>
-      sur Serveur2 sans erreur. Si c'est le cas, rsync et SSH sont correctement configurés.
-    </p>
+<h3 id="configuration">lsyncd sur le server1</h3> 
+<p>Crée le fichier de configuration</p> 
+<pre><code><span class="c-keyword">mkdir -p /etc/lsyncd</span>
+<span class="c-keyword">nano /etc/lsyncd/lsyncd.conf.lua</span>
+<span class="c-comment"># répertoire de logs</span>
+<span class="c-keyword">mkdir -p /var/log/lsyncd</span></code></pre>
+<p>Copier le contenu ci-dessus</p>
 
-    <!-- 5 - Configuration Lsyncd -->
-    <h3 id="config-lsyncd">5 — Configuration de Lsyncd</h3>
-    <p>Créer le fichier de configuration et le répertoire de logs :</p>
-<pre><code><span class="c-keyword">mkdir</span> -p /etc/lsyncd
-<span class="c-keyword">mkdir</span> -p /var/log/lsyncd
-<span class="c-keyword">nano</span> /etc/lsyncd/lsyncd.conf.lua</code></pre>
-
-    <p>
-      Copier le contenu suivant. Chaque bloc <code>sync</code> gère une paire source/cible de
-      manière indépendante — c'est la règle fondamentale de Lsyncd :
-      <strong>un bloc <code>sync</code> par paire source/cible</strong>.
-    </p>
-
-<pre><code><span class="c-keyword">settings</span> {
-    logfile        = <span class="c-func">"/var/log/lsyncd/lsyncd.log"</span>,
-    statusFile     = <span class="c-func">"/var/log/lsyncd/lsyncd.status"</span>,
-    nodaemon       = false,
-    statusInterval = 5,
+<pre><code>
+<span class="c-keyword">settings</span> {
+    logfile    = <span class="c-func">"/var/log/lsyncd/lsyncd.log",</span>
+    statusFile = <span class="c-func">"/var/log/lsyncd/lsyncd.status",</span>
+    nodaemon   = <span class="c-func">false,</span>
+    statusInterval = <span class="c-number"> 5,</span>
 }
-
-<span class="c-comment">-- Bloc 1 : demo1 → rep-sync1</span>
+<span class="c-comment"># BLOC-2 demo1 vers rep-sync1</span>
 <span class="c-keyword">sync</span> {
     default.rsync,
-    source = <span class="c-func">"/home/user1/demo1/"</span>,
-    target = <span class="c-func">"root@192.168.100.226:/home/user2/rep-sync1"</span>,
-    rsync  = {
-        archive  = true,
-        compress = true,
-        verbose  = true,
+    source  = <span class="c-func">"/home/user1/demo1/",</span>
+    target  = <span class="c-func">"root@192.168.100.226:/home/user2/rep-sync1",</span>
+    rsync   = {
+        archive  = <span class="c-number">true,</span>
+        compress = <span class="c-number">true,</span>
+        verbose  = <span class="c-number">true,</span>
         rsh      = <span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span>
     }
 }
-
-<span class="c-comment">-- Bloc 2 : demo2 → rep-sync2</span>
+<span class="c-comment"># BLOC-1 demo2 vers rep-sync2</span>
 <span class="c-keyword">sync</span> {
     default.rsync,
-    source = <span class="c-func">"/home/user1/demo2/"</span>,
-    target = <span class="c-func">"root@192.168.100.226:/home/user2/rep-sync2"</span>,
-    rsync  = {
-        archive  = true,
-        compress = true,
-        verbose  = true,
+    source  = <span class="c-func">"/home/user1/demo2/",</span>
+    target  = <span class="c-func">"root@192.168.100.226:/home/user2/rep-sync2",</span>
+    rsync   = {
+        archive  = <span class="c-number">true,</span>
+        compress = <span class="c-number">true,</span>
+        verbose  = <span class="c-number">true,</span>
         rsh      = <span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span>
     }
-}</code></pre>
+}</span></code></pre>
 
-    <!-- 6 - Démarrage -->
-    <h3 id="demarrage">6 — Démarrer et activer le service</h3>
-<pre><code><span class="c-comment"># Démarrer le service immédiatement</span>
-<span class="c-keyword">systemctl</span> start lsyncd
+<p>lsyncd fonctionne selon la regle : <code>une source, une target par bloc sync</code>. la configuration est prete pour une synchronisation des deux repertoires en cas d'un evenement
+  detecter dans un des repertoires sources.
+</p>
 
-<span class="c-comment"># Activer le démarrage automatique au boot</span>
-<span class="c-keyword">systemctl</span> enable lsyncd
 
-<span class="c-comment"># Vérifier que le service est actif (active running)</span>
-<span class="c-keyword">systemctl</span> status lsyncd
+<h3 id="Demarrer le service">Démarrer et activer lsyncd</h3>
 
-<span class="c-comment"># Suivre les logs en temps réel pour valider la synchronisation</span>
-<span class="c-keyword">tail</span> -f /var/log/lsyncd/lsyncd.log</code></pre>
+<pre><code><span class="c-comment"># Démarrer le service</span>
+<span class="c-keyword">systemctl start lsyncd</span>
+<span class="c-comment"># Activer au démarrage automatique</span>
+<span class="c-keyword">systemctl enable lsyncd</span>
+<span class="c-comment"># Vérifier le statut</span>
+<span class="c-keyword">systemctl status lsyncd</span></code></pre>
+
+
 
     <hr class="sep" />
 
-    <!-- ── CAS D'USAGE AVANCÉS ── -->
-    <h2 id="cas-avances">Cas d'usage avancés</h2>
-
-    <h3>Deux sources vers une même destination</h3>
+    <h2 id="resultats">Résultats & Tests</h2>
     <p>
-      Il n'est pas possible de déclarer plusieurs sources dans un seul bloc <code>sync</code>.
-      La solution est d'utiliser deux blocs pointant vers la même <code>target</code> :
-    </p>
-<pre><code>  Serveur1
-  /home/user1/demo1/  ──┐
-                        ├──▶  Serveur2 : /home/user2/rep-sync1
-  /home/user1/demo2/  ──┘</code></pre>
-
-<pre><code><span class="c-comment">-- Bloc 1 : demo1 → rep-sync1</span>
-<span class="c-keyword">sync</span> {
-    default.rsync,
-    source = <span class="c-func">"/home/user1/demo1/"</span>,
-    target = <span class="c-func">"root@192.168.100.226:/home/user2/rep-sync1"</span>,
-    rsync  = {
-        archive  = true,
-        compress = true,
-        verbose  = true,
-        rsh      = <span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span>
-    }
-}
-
-<span class="c-comment">-- Bloc 2 : demo2 → rep-sync1 (même destination)</span>
-<span class="c-keyword">sync</span> {
-    default.rsync,
-    source = <span class="c-func">"/home/user1/demo2/"</span>,
-    target = <span class="c-func">"root@192.168.100.226:/home/user2/rep-sync1"</span>,
-    rsync  = {
-        archive  = true,
-        compress = true,
-        verbose  = true,
-        rsh      = <span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span>
-    }
-}</code></pre>
-
-    <div class="warn-box">
-      <strong>⚠ Attention aux conflits de noms :</strong> si <code>demo1/</code> et
-      <code>demo2/</code> contiennent un fichier portant le même nom, le dernier rsync
-      à s'exécuter écrasera silencieusement le précédent. Lsyncd ne gère pas les conflits.
-      S'assurer que les sources ont des contenus disjoints.
-    </div>
-
-    <h3>Une source vers plusieurs serveurs distants</h3>
-    <p>
-      Ajouter un bloc <code>sync</code> par serveur cible. Lsyncd exécute chaque bloc dans
-      un processus parallèle et indépendant — si un serveur est hors ligne, les autres
-      continuent de se synchroniser normalement.
-    </p>
-<pre><code>  Serveur1 /home/user1/demo1/
-    │
-    ├──▶  192.168.100.226  /home/user2/  (Serveur2)
-    ├──▶  192.168.100.227  /home/user3/  (Serveur3)
-    ├──▶  192.168.100.228  /home/user4/  (Serveur4)
-    └──▶  192.168.100.229  /home/user5/  (Serveur5)</code></pre>
-
-<pre><code><span class="c-keyword">settings</span> {
-    logfile        = <span class="c-func">"/var/log/lsyncd/lsyncd.log"</span>,
-    statusFile     = <span class="c-func">"/var/log/lsyncd/lsyncd.status"</span>,
-    nodaemon       = false,
-    statusInterval = 5,
-}
-
-<span class="c-comment">-- Serveur2</span>
-<span class="c-keyword">sync</span> {
-    default.rsync,
-    source = <span class="c-func">"/home/user1/demo1/"</span>,
-    target = <span class="c-func">"root@192.168.100.226:/home/user2"</span>,
-    rsync  = { archive=true, compress=true, verbose=true,
-               rsh=<span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span> }
-}
-
-<span class="c-comment">-- Serveur3</span>
-<span class="c-keyword">sync</span> {
-    default.rsync,
-    source = <span class="c-func">"/home/user1/demo1/"</span>,
-    target = <span class="c-func">"root@192.168.100.227:/home/user3"</span>,
-    rsync  = { archive=true, compress=true, verbose=true,
-               rsh=<span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span> }
-}
-
-<span class="c-comment">-- Serveur4</span>
-<span class="c-keyword">sync</span> {
-    default.rsync,
-    source = <span class="c-func">"/home/user1/demo1/"</span>,
-    target = <span class="c-func">"root@192.168.100.228:/home/user4"</span>,
-    rsync  = { archive=true, compress=true, verbose=true,
-               rsh=<span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span> }
-}
-
-<span class="c-comment">-- Serveur5</span>
-<span class="c-keyword">sync</span> {
-    default.rsync,
-    source = <span class="c-func">"/home/user1/demo1/"</span>,
-    target = <span class="c-func">"root@192.168.100.229:/home/user5"</span>,
-    rsync  = { archive=true, compress=true, verbose=true,
-               rsh=<span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span> }
-}</code></pre>
-
-    <div class="warn-box">
-      <strong>⚠ Ne pas oublier :</strong> copier la clé SSH sur chaque serveur cible avec
-      <code>ssh-copy-id</code> et tester la connexion depuis Serveur1 avant de démarrer
-      Lsyncd. Un serveur sans la clé bloquera son bloc de synchronisation sans affecter les autres.
-    </div>
-
-    <hr class="sep" />
-
-    <!-- ── RÉSULTATS ── -->
-    <h2 id="resultats">Résultats &amp; Tests</h2>
-    <p>
-      Les tests ont été conduits sur un réseau local avec deux machines virtuelles Debian 12.
+      Les tests ont été effectués sur une machine virtuelle Kali Linux, 
+      avec une liste de hashes <code>MD5</code> générés localement à partir de mots de passe connus.
     </p>
     <ul>
-      <li>
-        <strong>Latence de synchronisation :</strong> les modifications sont répliquées en moins
-        d'une seconde pour des fichiers de taille standard (&lt; 10 Mo)
-      </li>
-      <li>
-        <strong>Robustesse :</strong> en cas d'interruption réseau, Lsyncd reprend la
-        synchronisation automatiquement dès que la connexion est rétablie, sans perte de données
-      </li>
-      <li>
-        <strong>Monitoring :</strong> les fichiers <code>/var/log/lsyncd/lsyncd.log</code> et
-        <code>lsyncd.status</code> permettent de suivre l'activité en temps réel et de
-        diagnostiquer d'éventuelles erreurs
-      </li>
-      <li>
-        <strong>Parallélisme :</strong> les deux blocs <code>sync</code> s'exécutent en parallèle
-        sans interférence, même lorsque les deux répertoires sources sont modifiés simultanément
-      </li>
+      <li><strong>Mots de passe simples (&lt; 6 car.) :</strong> retrouvés en moins de 2 secondes</li>
+      <li><strong>Mots du dictionnaire :</strong> 95 % retrouvés en moins d'une minute</li>
+      <li><strong>Avec mutations :</strong> +12 % de taux de succès supplémentaire</li>
+      <li><strong>Mots complexes (&gt; 10 car. mixtes) :</strong> non retrouvés (temps prohibitif sans GPU)</li>
     </ul>
     <div class="info-box">
-      <strong>Bilan :</strong> la solution est opérationnelle, légère en ressources et adaptée à
-      des environnements de production modestes. Pour des besoins plus avancés — synchronisation
-      bi-directionnelle, gestion de conflits — des outils comme <strong>Unison</strong> ou
-      <strong>GlusterFS</strong> seraient à envisager.
+      <strong>Conclusion des tests :</strong> Un mot de passe d'au moins 12 caractères combinant 
+      majuscules, minuscules, chiffres et symboles résiste efficacement à toutes les attaques testées. 
+      L'usage d'un gestionnaire comme <strong>KeePass</strong> est fortement recommandé.
     </div>
 
     <hr class="sep" />
 
-    <!-- ── CONCLUSION ── -->
+    <h2 id="limites">Limites & Éthique</h2>
+
+    <h3 id="Demarrer le service">Deux sources vers une destionation</h3>
+
+<pre><code>  Serveur 1                        
+/home/user1/demo1/  ─────┐            Server2
+                         ├────► /home/user2/rep-sync1
+/home/user1/demo2/  ─────┘
+</code></pre>
+
+    <p>Deux sources (/home/user1/demo1/", "/home/user1/demo2/") vers une seule destination (/home/user2/rep-sync1).
+      impossible d'ecrire <code>source = { "/home/user1/demo1/", "/home/user1/demo2/" }</code> dans le fichier de config.
+      Solution — Deux blocs vers la même target. modifié justes les lignes sources et target du 2eme bloc sync dans le fichier <code>/etc/lsyncd/lsyncd.conf.lua</code>
+    </p>
+
+<pre><code><span class="c-comment"># demo2 vers rep-sync2</span>
+<span class="c-keyword">sync</span> {
+    default.rsync,
+    source  = <span class="c-func">"/home/user1/demo2/",</span>
+    target  = <span class="c-func">"root@192.168.100.226:/home/user2/rep-sync1",</span>
+    rsync   = {
+        archive  = <span class="c-number">true,</span>
+        compress = <span class="c-number">true,</span>
+        verbose  = <span class="c-number">true,</span>
+        rsh      = <span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span>
+    }
+}</span></code></pre>
+
+
+<div class="warn-box">
+  <strong>⚠  Attention aux conflits :</strong>si /home/user1/demo1/ et /home/user1/demo2/ contiennent des 
+  fichiers avec le même nom, le dernier rsync à s'exécuter écrase le fichier — il n'y a pas de gestion de conflit.
+</div>
+
+
+
+
+<h3 id="Demarrer le service">une source vers une plusieur serveurs distant</h3>
+<p>
+  Synchronisation vers 4 machines simultanément. Il suffit d'ajouter un bloc sync par machine.
+  chaque bloc est indépendant. /etc/lsyncd/lsyncd.conf.lua
+</p>
+<pre><code>
+<span class="c-keyword">settings</span> {
+    logfile    = <span class="c-func">"/var/log/lsyncd/lsyncd.log",</span>
+    statusFile = <span class="c-func">"/var/log/lsyncd/lsyncd.status",</span>
+    nodaemon   = <span class="c-func">false,</span>
+    statusInterval = <span class="c-number"> 5,</span>
+}
+<span class="c-comment"># BLOC-1 server1 vers server2</span>
+<span class="c-keyword">sync</span> {
+    default.rsync,
+    source  = <span class="c-func">"/home/user1/demo1/",</span>
+    target  = <span class="c-func">"root@192.168.100.226:/home/user2/rep-sync1",</span>
+    rsync   = {
+        archive  = <span class="c-number">true,</span>
+        compress = <span class="c-number">true,</span>
+        verbose  = <span class="c-number">true,</span>
+        rsh      = <span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span>
+    }
+}
+<span class="c-comment"># BLOC-2 server1 vers server3</span>
+<span class="c-keyword">sync</span> {
+    default.rsync,
+    source  = <span class="c-func">"/home/user1/demo1/",</span>
+    target  = <span class="c-func">"root@192.168.100.227:/home/user3",</span>
+    rsync   = {
+        archive  = <span class="c-number">true,</span>
+        compress = <span class="c-number">true,</span>
+        verbose  = <span class="c-number">true,</span>
+        rsh      = <span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span>
+    }
+  }
+<span class="c-comment"># BLOC-3 server1 vers server4</span>
+<span class="c-keyword">sync</span> {
+    default.rsync,
+    source  = <span class="c-func">"/home/user1/demo1/",</span>
+    target  = <span class="c-func">"root@192.168.100.228:/home/user4",</span>
+    rsync   = {
+        archive  = <span class="c-number">true,</span>
+        compress = <span class="c-number">true,</span>
+        verbose  = <span class="c-number">true,</span>
+        rsh      = <span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span>
+    }
+  }
+<span class="c-comment"># BLOC-2 server1 vers server6</span>
+<span class="c-keyword">sync</span> {
+    default.rsync,
+    source  = <span class="c-func">"/home/user1/demo1/",</span>
+    target  = <span class="c-func">"root@192.168.100.226:/home/user5",</span>
+    rsync   = {
+        archive  = <span class="c-number">true,</span>
+        compress = <span class="c-number">true,</span>
+        verbose  = <span class="c-number">true,</span>
+        rsh      = <span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span>
+    }
+  }</span></code></pre>
+
+<p>
+  lsyncd gère chaque bloc sync dans un processus parallèle. si un serveur est hors ligne, les autres continuent 
+  de se synchroniser normalement. simultané, en temps réel, indépendant
+</p>
+
+<pre><code>Server1 
+/home/user1/
+    │
+    ├──► 192.168.100.226 /home/user2/ - Server2
+    ├──► 192.168.100.227 /home/user3/ - Server3
+    ├──► 192.168.100.228 /home/user4/ - Server4
+    └──► 192.168.100.229 /home/user5/ - Server5</code></pre>
+
+
+<div class="warn-box">
+  <strong>⚠ NE PAS OUBLIER :</strong>La clé SSH doit être copiée sur chacune des 4 machines. On poura utiliser la 
+  methode precdente pour les differentes operations de copies. Tester la connexion de server1 vers Server{3,4,5}.
+</div>
+
+    <ul>
+      <li>Performance limitée en Python pur — pas d'accélération GPU</li>
+      <li>Fonctionne uniquement sur des hashes non salés (<code>MD5</code>, <code>SHA1</code>)</li>
+      <li>Wordlists limitées en taille pour des raisons d'espace disque</li>
+      <li>Usage <strong>strictement réservé</strong> aux tests sur ses propres systèmes</li>
+    </ul>
+
+    <hr class="sep" />
+
     <h2 id="conclusion">Conclusion</h2>
     <p>
-      Ce projet m'a permis de maîtriser concrètement la mise en place d'une solution de réplication
-      de fichiers en temps réel sur Linux. Au-delà de la configuration technique, il illustre des
-      enjeux importants en administration système : sécurisation des accès SSH, gestion des droits,
-      surveillance via les logs, et conception d'architectures de données résilientes.
+      Ce projet m'a permis de comprendre concrètement les mécanismes d'attaque sur les mots de passe 
+      et l'importance de politiques de sécurité rigoureuses. Il illustre parfaitement pourquoi 
+      l'utilisation d'un gestionnaire de mots de passe comme <strong>KeePass</strong> et 
+      l'adoption d'une politique de mots de passe forts sont indispensables dans tout 
+      environnement professionnel ou personnel.
     </p>
     <p>
-      Les compétences mobilisées — inotify, rsync, SSH par clé, Lsyncd — sont directement
-      transférables à des contextes professionnels tels que la sauvegarde automatisée, la haute
-      disponibilité ou la mise en miroir de serveurs de fichiers.
+      Ce projet s'inscrit dans ma démarche globale d'apprentissage du pentest et du hacking éthique, 
+      en combinant compréhension théorique des attaques et implémentation pratique des outils.
     </p>
 
     <!-- Navigation bas de page -->
@@ -445,7 +443,7 @@ PasswordAuthentication yes  <span class="c-comment"># autoriser l'auth par mot d
       <a href="../index.html#projets" class="btn-back">
         <i class="bi bi-arrow-left"></i> Retour aux projets
       </a>
-      <a href="projet2.html" class="btn-next">
+      <a href="projet3.html" class="btn-next">
         Projet suivant <i class="bi bi-arrow-right"></i>
       </a>
     </div>
@@ -459,7 +457,7 @@ PasswordAuthentication yes  <span class="c-comment"># autoriser l'auth par mot d
     <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" alt="cybersécurité icon"/>
   </div>
   <p class="footer-main">
-    Conçu &amp; développé par <span>DOLI B. Bernard</span> —
+    Conçu &amp; développé par <span>DOLI B. Bernard</span> — 
     Ingénieur Cybersécurité | Pentester | Investigateur numérique
   </p>
   <p class="footer-sub">Sécuriser aujourd'hui, protéger demain</p>

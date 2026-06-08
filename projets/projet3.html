@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sécurité QR code — DOLI B. Bernard</title>
+  <title>Sécurité des QR Codes — DOLI B. Bernard</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,6 +11,213 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="../css/projet.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    /* ── Styles spécifiques à ce projet (complètent projet.css) ── */
+
+    /* JWT anatomy */
+    .jwt-anatomy {
+      display: flex; gap: 4px; flex-wrap: wrap;
+      font-family: 'DM Mono', monospace; font-size: 12px;
+      margin: 1rem 0;
+    }
+    .jwt-part {
+      padding: 6px 11px; border-radius: 6px;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .jwt-part span {
+      font-size: 10px; font-weight: 600;
+      letter-spacing: .07em; text-transform: uppercase; opacity: .75;
+    }
+    .jwt-header  { background: rgba(124,77,255,.15); border: 1px solid rgba(124,77,255,.35); color: #b39dff; }
+    .jwt-payload { background: rgba(0,180,216,.12);  border: 1px solid rgba(0,180,216,.3);  color: #67d4f8; }
+    .jwt-sig     { background: rgba(0,200,120,.1);   border: 1px solid rgba(0,200,120,.25); color: #52e0a0; }
+    .jwt-dot     { align-self: center; font-size: 20px; opacity: .4; }
+
+    /* Schema comparatif */
+    .schema-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin: 1.2rem 0;
+    }
+    .schema-card {
+      border-radius: 10px; padding: 1.1rem;
+      background: rgba(255,255,255,.03);
+    }
+    .schema-card.bad  { border: 1px solid rgba(220,53,69,.35); }
+    .schema-card.good { border: 1px solid rgba(25,135,84,.3);  }
+    .schema-card .card-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; margin-bottom: .7rem;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .schema-card.bad  .card-label { color: #dc3545; }
+    .schema-card.good .card-label { color: #198754; }
+    .schema-card pre { margin: 0; }
+
+    /* Steps numérotés */
+    .steps { margin: 1rem 0; }
+    .step {
+      display: flex; gap: 1rem; align-items: flex-start;
+      padding: .85rem 1rem; margin-bottom: .6rem;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px;
+    }
+    .step-num {
+      min-width: 28px; height: 28px;
+      background: rgba(220,53,69,.15); border: 1px solid rgba(220,53,69,.35);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #dc3545;
+      font-family: 'DM Mono', monospace; flex-shrink: 0;
+    }
+    .step-body strong {
+      display: block; margin-bottom: 2px; font-size: 15px;
+    }
+    .step-body span { font-size: 14px; opacity: .8; }
+
+    /* Démo interactive */
+    .demo-block {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px; padding: 1.6rem;
+      margin: 1.4rem 0;
+    }
+    .demo-block.vuln  { border-color: rgba(220,53,69,.3); }
+    .demo-block.safe  { border-color: rgba(25,135,84,.28); }
+
+    .demo-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .09em;
+      text-transform: uppercase; margin-bottom: 1.2rem;
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 4px 12px; border-radius: 20px;
+    }
+    .demo-label.vuln { background: rgba(220,53,69,.12); border: 1px solid rgba(220,53,69,.3); color: #dc3545; }
+    .demo-label.safe { background: rgba(25,135,84,.1);  border: 1px solid rgba(25,135,84,.28); color: #198754; }
+    .demo-label.atk  { background: rgba(255,171,40,.1); border: 1px solid rgba(255,171,40,.3); color: #ffab28; }
+
+    .demo-grid {
+      display: grid; grid-template-columns: auto 1fr;
+      gap: 1.4rem; align-items: start; margin-top: 1.2rem;
+    }
+    .demo-col-title {
+      font-size: 11px; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; opacity: .5; margin-bottom: .5rem;
+    }
+
+    /* QR wrapper */
+    .qr-wrap {
+      background: #fff; border-radius: 8px;
+      padding: 12px; display: inline-flex;
+      align-items: center; justify-content: center;
+      width: 168px; height: 168px;
+    }
+    #qrcode canvas, #qrcode img,
+    #qr-fake canvas, #qr-fake img,
+    #qr-secure canvas, #qr-secure img {
+      width: 144px !important; height: 144px !important;
+    }
+
+    /* Champs formulaire */
+    .fields-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: .7rem; margin-bottom: 1rem;
+    }
+    .field-g label {
+      display: block; font-size: 11px; font-weight: 600;
+      letter-spacing: .05em; text-transform: uppercase;
+      opacity: .55; margin-bottom: .3rem;
+    }
+    .field-g input, .field-g select {
+      width: 100%;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 6px; padding: 7px 10px;
+      color: inherit; font-family: 'DM Mono', monospace;
+      font-size: 13px; outline: none;
+    }
+    .field-g input:focus, .field-g select:focus {
+      border-color: rgba(255,255,255,.4);
+    }
+    .field-g select option { background: #1a1e2e; }
+
+    /* Boutons */
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: .8rem; }
+    .btn-demo {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; padding: 7px 16px;
+      border-radius: 6px; border: 1px solid; cursor: pointer;
+      transition: background .18s;
+    }
+    .btn-demo.primary { background: rgba(13,202,240,.1); border-color: rgba(13,202,240,.5); color: #0dcaf0; }
+    .btn-demo.primary:hover { background: rgba(13,202,240,.2); }
+    .btn-demo.danger  { background: rgba(220,53,69,.1);  border-color: rgba(220,53,69,.4);  color: #dc3545; }
+    .btn-demo.danger:hover  { background: rgba(220,53,69,.2); }
+    .btn-demo.success { background: rgba(25,135,84,.1);  border-color: rgba(25,135,84,.35); color: #198754; }
+    .btn-demo.success:hover { background: rgba(25,135,84,.2); }
+
+    /* Sortie JSON */
+    .json-out {
+      background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px; padding: .9rem 1rem;
+      font-family: 'DM Mono', monospace; font-size: 12.5px;
+      line-height: 1.85; white-space: pre-wrap; word-break: break-all;
+      min-height: 56px;
+    }
+    .json-out.vuln  { border-color: rgba(220,53,69,.35); color: #ff8a9a; }
+    .json-out.safe  { border-color: rgba(25,135,84,.3);  color: #6ee0a8; }
+    .json-out.diff  { border-color: rgba(255,171,40,.3); color: #ffd166; }
+
+    /* Éditeur JSON */
+    .json-editor {
+      width: 100%; background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
+      padding: .9rem 1rem; color: inherit;
+      font-family: 'DM Mono', monospace; font-size: 12.5px;
+      line-height: 1.85; resize: vertical; min-height: 160px; outline: none;
+    }
+    .json-editor:focus { border-color: rgba(255,255,255,.35); }
+
+    /* Status */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700; letter-spacing: .04em;
+      padding: 4px 12px; border-radius: 20px; margin-top: .6rem;
+    }
+    .status-badge.vuln { background: rgba(220,53,69,.12); border: 1px solid rgba(220,53,69,.3); color: #dc3545; }
+    .status-badge.safe { background: rgba(25,135,84,.1);  border: 1px solid rgba(25,135,84,.28); color: #198754; }
+
+    /* Bonnes pratiques grid */
+    .bp-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: .9rem; margin: 1.2rem 0;
+    }
+    .bp-card {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 10px; padding: 1.1rem;
+      transition: border-color .2s;
+    }
+    .bp-card:hover { border-color: rgba(255,255,255,.2); }
+    .bp-card .bp-icon { font-size: 22px; margin-bottom: .5rem; display: block; }
+    .bp-card h4 { font-size: 15px; font-weight: 700; margin-bottom: .3rem; }
+    .bp-card p  { font-size: 13px; opacity: .6; margin: 0; line-height: 1.6; }
+
+    /* Syntaxe code */
+    .c-keyword { color: #c792ea; }
+    .c-func    { color: #82aaff; }
+    .c-string  { color: #c3e88d; }
+    .c-comment { color: #546e7a; font-style: italic; }
+    .c-key     { color: #89ddff; }
+    .c-val     { color: #f78c6c; }
+    .c-num     { color: #f78c6c; }
+    .c-str     { color: #c3e88d; }
+
+    @media (max-width: 700px) {
+      .schema-row, .fields-row, .demo-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
@@ -25,7 +232,7 @@
   </ul>
 </nav>
 
-<!-- ======= HERO DARK ======= -->
+<!-- ======= HERO ======= -->
 <header class="projet-hero">
   <div class="inner">
     <p class="projet-breadcrumb">
@@ -33,192 +240,483 @@
       <span>›</span>
       <a href="../index.html#projets">Projets</a>
       <span>›</span>
-      Sécurité QR Code
+      Sécurité des QR Codes
     </p>
-    <h1>Sécurité QR Code</h1>
+    <h1>Sécurité des QR Codes</h1>
     <div class="projet-meta">
-      <span class="projet-tag">Application</span>
-      <span class="projet-tag">Android</span>
-      <span class="projet-tag">Sécurité</span>
+      <span class="projet-tag">Vulnérabilité</span>
+      <span class="projet-tag">JWT</span>
+      <span class="projet-tag">Cryptographie</span>
+      <span class="projet-tag">Sécurité offensive</span>
     </div>
     <p class="projet-intro">
-      Outil de test de robustesse des mots de passe développé en Python, 
-      combinant attaque par dictionnaire, brute force et règles de mutation. 
-      Réalisé dans un cadre strictement éthique et pédagogique.
+      Les QR Codes sont omniprésents — paiements, contrôle d'accès, authentification.
+      Encoder des données critiques en clair expose les systèmes à des attaques triviales
+      de falsification. Ce projet démontre le vecteur d'attaque de bout en bout,
+      et propose les contre-mesures cryptographiques appropriées.
     </p>
   </div>
-  <!-- Image de couverture collée au bas du hero -->
   <div class="projet-cover-wrap">
-    <img src="../images/mdp.png" alt="Casseur de mots de passe" />
+    <img src="../images/codeqr.png" alt="QR Code vulnerabilities" />
   </div>
 </header>
 
-<!-- ======= CORPS : sommaire + article ======= -->
+<!-- ======= CORPS ======= -->
 <div class="projet-body">
 
-  <!-- SOMMAIRE GAUCHE -->
+  <!-- SOMMAIRE -->
   <aside class="projet-toc">
     <p class="projet-toc-title">Sommaire</p>
     <ul id="toc-list">
       <li><a href="#introduction">Introduction</a></li>
-      <li><a href="#contexte">Contexte & Objectifs</a></li>
-      <li><a href="#fonctionnement">Fonctionnement</a></li>
-      <li class="toc-sub"><a href="#dictionnaire">Attaque par dictionnaire</a></li>
-      <li class="toc-sub"><a href="#bruteforce">Brute force</a></li>
-      <li class="toc-sub"><a href="#mutation">Règles de mutation</a></li>
-      <li><a href="#code">Extraits de code</a></li>
-      <li><a href="#resultats">Résultats & Tests</a></li>
-      <li><a href="#limites">Limites & Éthique</a></li>
+      <li><a href="#probleme">Le problème</a></li>
+      <li class="toc-sub"><a href="#donnees-claires">Données en clair</a></li>
+      <li class="toc-sub"><a href="#attaque">Vecteur d'attaque</a></li>
+      <li><a href="#demo">Démo interactive</a></li>
+      <li class="toc-sub"><a href="#demo-vuln">QR vulnérable</a></li>
+      <li class="toc-sub"><a href="#demo-exploit">Exploitation</a></li>
+      <li><a href="#mesures">Bonnes pratiques</a></li>
+      <li class="toc-sub"><a href="#jwt">Signature JWT</a></li>
+      <li class="toc-sub"><a href="#expiration">Expiration (TTL)</a></li>
+      <li class="toc-sub"><a href="#chiffrement">Chiffrement JWE</a></li>
+      <li><a href="#demo-secure">QR sécurisé</a></li>
       <li><a href="#conclusion">Conclusion</a></li>
     </ul>
   </aside>
 
-  <!-- CONTENU ARTICLE -->
+  <!-- ARTICLE -->
   <article class="projet-content">
 
+    <!-- ── INTRODUCTION ── -->
     <h2 id="introduction">Introduction</h2>
     <p>
-      Ce projet a été développé dans le cadre de mon apprentissage du hacking éthique.
-      L'objectif est de comprendre <strong>comment les attaquants tentent de retrouver 
-      des mots de passe</strong>, afin de mieux défendre les systèmes contre ces techniques.
+      Un QR Code est simplement l'encodage visuel d'une chaîne de caractères.
+      N'importe qui disposant d'un smartphone peut lire, copier et modifier ce contenu
+      en quelques secondes. Lorsque des applications y stockent des données sensibles —
+      montant d'un paiement, rôle utilisateur, identifiant de session — elles remettent
+      de facto le contrôle à l'utilisateur final.
     </p>
+    <p>
+      Ce projet explore trois axes : <strong>pourquoi c'est dangereux</strong>,
+      <strong>comment l'attaque se déroule concrètement</strong>, et
+      <strong>quelles protections cryptographiques mettre en place</strong>.
+    </p>
+
+    <hr class="sep" />
+
+    <!-- ── LE PROBLÈME ── -->
+    <h2 id="probleme">Le problème : données critiques en clair</h2>
+
+    <h3 id="donnees-claires">Un QR Code n'est pas un coffre-fort</h3>
+    <p>
+      Contrairement à ce que son aspect visuel peut laisser croire, un QR Code n'offre
+      <strong>aucune confidentialité et aucune intégrité</strong> par lui-même.
+      Il encode une chaîne de caractères — souvent du JSON — lisible par n'importe quel lecteur.
+    </p>
+
+    <div class="schema-row">
+      <div class="schema-card bad">
+        <p class="card-label"><i class="bi bi-x-circle-fill"></i> QR Code vulnérable</p>
+<pre><code>{
+  <span class="c-key">"user_id"</span>: <span class="c-str">"1042"</span>,
+  <span class="c-key">"role"</span>:    <span class="c-val">"admin"</span>,
+  <span class="c-key">"montant"</span>: <span class="c-num">15000</span>,
+  <span class="c-key">"devise"</span>:  <span class="c-str">"XOF"</span>,
+  <span class="c-key">"valide"</span>:  <span class="c-val">true</span>
+}</code></pre>
+      </div>
+      <div class="schema-card good">
+        <p class="card-label"><i class="bi bi-check-circle-fill"></i> QR Code sécurisé</p>
+<pre><code>{
+  <span class="c-key">"token"</span>: <span class="c-str">"eyJhbGci
+OiJIUzI1NiJ9
+.eyJ0eGlkIjoi
+VFhOLTQ0MiIs
+ImV4cCI6MTc1
+MTMzNzYwMH0
+.mK9xR2vTpL..."</span>
+}</code></pre>
+      </div>
+    </div>
+
+    <p>
+      Dans le premier cas, toutes les données sont lisibles et modifiables sans aucun outil.
+      Dans le second, le QR Code ne contient qu'un <strong>token JWT signé</strong> —
+      les données réelles vivent côté serveur, protégées par une signature cryptographique.
+    </p>
+
     <div class="warn-box">
-      <strong>⚠ Avertissement :</strong> Cet outil est réalisé dans un cadre légal et 
-      pédagogique uniquement. Tout test doit être effectué sur des systèmes vous appartenant 
-      ou pour lesquels vous disposez d'une autorisation écrite explicite.
+      <strong>⚠ Données à ne jamais encoder en clair dans un QR Code :</strong>
+      montants financiers, rôles et permissions utilisateur, identifiants de session,
+      codes de validation, droits d'accès, tokens de réinitialisation de mot de passe.
+    </div>
+
+    <h3 id="attaque">Vecteur d'attaque : falsification en 3 étapes</h3>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Scan et extraction</strong>
+          <span>L'attaquant scanne le QR Code avec n'importe quel lecteur (smartphone, ZBar, Python). Il obtient le JSON en clair en moins d'une seconde — aucun outil spécialisé requis.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Modification des données critiques</strong>
+          <span>Il édite le JSON : change <code>"role":"user"</code> en <code>"role":"admin"</code>, ou <code>"montant":15000</code> en <code>"montant":1</code>. Un simple éditeur de texte suffit.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Regénération du QR Code falsifié</strong>
+          <span>Il encode le JSON modifié dans un nouveau QR Code (qrcode.js, Python, apps mobiles). Le résultat est visuellement identique à l'original — impossible à distinguer à l'œil nu.</span>
+        </div>
+      </div>
     </div>
 
     <hr class="sep" />
 
-    <h2 id="contexte">Contexte & Objectifs</h2>
+    <!-- ── DÉMO ── -->
+    <h2 id="demo">Démo interactive</h2>
     <p>
-      Dans le cadre de ma formation en cybersécurité à l'ESI, j'ai souhaité mettre en pratique 
-      les notions de cryptographie et d'attaques sur les mots de passe. Les objectifs principaux étaient :
+      Les démonstrations ci-dessous reproduisent exactement ce qu'un attaquant peut réaliser
+      avec de simples outils en ligne. Aucune compétence technique avancée n'est requise.
     </p>
-    <ul>
-      <li>Comprendre les différentes méthodes d'attaque sur les mots de passe</li>
-      <li>Implémenter un outil fonctionnel en Python</li>
-      <li>Mesurer la robustesse de différents types de mots de passe</li>
-      <li>Sensibiliser à l'importance des bonnes pratiques de sécurité</li>
-    </ul>
+
+    <div class="warn-box">
+      <strong>⚠ Cadre pédagogique :</strong> ces démonstrations sont réalisées dans un
+      environnement isolé à des fins éducatives. Toute exploitation de cette technique
+      sur des systèmes réels sans autorisation explicite est illégale.
+    </div>
+
+    <!-- DÉMO 1 : QR vulnérable -->
+    <h3 id="demo-vuln">Étape 1 — Génération d'un QR Code vulnérable</h3>
+    <p>
+      Configurez les données du ticket de paiement. Observez que toutes les informations
+      critiques seront encodées lisiblement dans le QR Code, sans aucune protection.
+    </p>
+
+    <div class="demo-block vuln">
+      <span class="demo-label vuln"><i class="bi bi-unlock-fill"></i> Données en clair</span>
+
+      <div class="fields-row">
+        <div class="field-g">
+          <label>Utilisateur</label>
+          <input type="text" id="f-user" value="amadou.diallo"/>
+        </div>
+        <div class="field-g">
+          <label>Rôle</label>
+          <select id="f-role">
+            <option value="user">user</option>
+            <option value="admin">admin</option>
+            <option value="cashier">cashier</option>
+          </select>
+        </div>
+        <div class="field-g">
+          <label>Montant (XOF)</label>
+          <input type="number" id="f-montant" value="15000"/>
+        </div>
+        <div class="field-g">
+          <label>Transaction ID</label>
+          <input type="text" id="f-txid" value="TXN-20260607-0042"/>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-demo danger" onclick="genVulnQR()">
+          <i class="bi bi-qr-code"></i> Générer le QR Code vulnérable
+        </button>
+      </div>
+
+      <div class="demo-grid" id="vuln-result" style="display:none; margin-top:1.2rem;">
+        <div>
+          <p class="demo-col-title">QR Code généré</p>
+          <div class="qr-wrap" id="qrcode"></div>
+          <div class="status-badge vuln">
+            <i class="bi bi-unlock-fill"></i> Données en clair — lisibles par tous
+          </div>
+        </div>
+        <div>
+          <p class="demo-col-title">Contenu après scan (JSON visible)</p>
+          <div class="json-out vuln" id="vuln-json"></div>
+          <p style="font-size:12px;opacity:.5;margin-top:.5rem;">
+            ↑ C'est exactement ce qu'un attaquant lit après un simple scan.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DÉMO 2 : Exploitation -->
+    <h3 id="demo-exploit">Étape 2 — Exploitation : modification et regénération</h3>
+    <p>
+      Simulez le comportement d'un attaquant : modifiez le JSON extrait, puis
+      regénérez un QR Code avec les valeurs falsifiées.
+    </p>
+
+    <div class="demo-block" style="border-color:rgba(255,171,40,.3);">
+      <span class="demo-label atk"><i class="bi bi-bug-fill"></i> Attaque en cours</span>
+
+      <p class="demo-col-title" style="margin-bottom:.5rem;">JSON extrait du QR Code (modifiable directement)</p>
+      <textarea class="json-editor" id="attack-json">{
+  "user": "amadou.diallo",
+  "role": "user",
+  "montant": 15000,
+  "devise": "XOF",
+  "txid": "TXN-20260607-0042",
+  "valide": true
+}</textarea>
+
+      <div class="btn-row">
+        <button class="btn-demo primary" onclick="loadVulnJSON()">
+          <i class="bi bi-arrow-down-circle"></i> Charger depuis le QR ci-dessus
+        </button>
+        <button class="btn-demo danger" onclick="injectAdmin()">
+          <i class="bi bi-person-fill-lock"></i> Injecter role: admin
+        </button>
+        <button class="btn-demo danger" onclick="injectMontant()">
+          <i class="bi bi-currency-dollar"></i> Falsifier montant → 1 XOF
+        </button>
+      </div>
+      <div class="btn-row" style="margin-top:.5rem;">
+        <button class="btn-demo success" onclick="genFakeQR()">
+          <i class="bi bi-qr-code-scan"></i> Générer le QR Code falsifié
+        </button>
+      </div>
+
+      <div class="demo-grid" id="fake-result" style="display:none; margin-top:1.2rem;">
+        <div>
+          <p class="demo-col-title">QR Code falsifié</p>
+          <div class="qr-wrap" id="qr-fake"></div>
+          <div class="status-badge vuln">
+            <i class="bi bi-exclamation-octagon-fill"></i> QR falsifié — données modifiées
+          </div>
+        </div>
+        <div>
+          <p class="demo-col-title">Diff : original vs falsifié</p>
+          <div class="json-out diff" id="diff-output"></div>
+        </div>
+      </div>
+    </div>
 
     <hr class="sep" />
 
-    <h2 id="fonctionnement">Fonctionnement</h2>
+    <!-- ── BONNES PRATIQUES ── -->
+    <h2 id="mesures">Bonnes pratiques de sécurisation</h2>
+
+    <h3 id="jwt">Signature JWT — encoder une référence, pas les données</h3>
     <p>
-      L'outil est structuré en trois modules principaux, chacun correspondant 
-      à une stratégie d'attaque différente.
+      Le principe fondamental : le QR Code ne doit <strong>pas contenir les données critiques</strong>,
+      mais une <strong>référence cryptographiquement signée</strong> permettant au serveur
+      de retrouver et valider les données en base.
     </p>
 
-    <h3 id="dictionnaire">Attaque par dictionnaire</h3>
+    <div class="jwt-anatomy">
+      <div class="jwt-part jwt-header">
+        <span>Header</span>
+        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+      </div>
+      <div class="jwt-dot">.</div>
+      <div class="jwt-part jwt-payload">
+        <span>Payload (ref. serveur uniquement)</span>
+        eyJ0eGlkIjoiVFhOLTQ0MiIsImV4cCI6MTc1MTMzNzYwMH0
+      </div>
+      <div class="jwt-dot">.</div>
+      <div class="jwt-part jwt-sig">
+        <span>Signature HMAC-SHA256</span>
+        mK9xR2vTpLwQs8nZcF3hYdBvJeXoGiUA
+      </div>
+    </div>
+
     <p>
-      L'attaque par dictionnaire teste une liste de mots de passe courants 
-      (noms, dates, mots simples). C'est la méthode la plus rapide et la plus efficace 
-      contre les mots de passe faibles. Elle repose sur des wordlists comme 
-      <code>rockyou.txt</code> qui contiennent des millions d'entrées.
+      Le payload ne contient que l'identifiant de transaction et une date d'expiration.
+      Les données réelles (montant, rôle…) restent en base, accessibles uniquement après
+      vérification cryptographique de la signature côté serveur.
     </p>
 
-    <h3 id="bruteforce">Brute force</h3>
-    <p>
-      Le brute force génère toutes les combinaisons possibles de caractères jusqu'à 
-      une longueur définie. Efficace mais exponentiellement lent au-delà de 6-7 caractères 
-      sans ressources GPU.
-    </p>
+<pre><code><span class="c-comment">// Côté serveur — génération du QR sécurisé (Node.js)</span>
 
-    <h3 id="mutation">Règles de mutation</h3>
-    <p>
-      Le module de mutation applique des transformations courantes sur les mots du dictionnaire : 
-      substitutions (<code>a→@</code>, <code>e→3</code>, <code>o→0</code>), ajout de chiffres 
-      en fin de mot, mise en majuscule de la première lettre, etc.
-    </p>
+<span class="c-comment">// ✓ Ce qu'on encode dans le QR : uniquement une référence opaque</span>
+<span class="c-keyword">const</span> payload = {
+  txid: <span class="c-string">"TXN-20260607-0042"</span>,  <span class="c-comment">// identifiant opaque, sans donnée critique</span>
+  iat:  <span class="c-num">1749734400</span>,             <span class="c-comment">// issued at</span>
+  exp:  <span class="c-num">1749734700</span>             <span class="c-comment">// expire dans 5 minutes</span>
+};
 
-    <hr class="sep" />
+<span class="c-keyword">const</span> token = jwt.sign(payload, process.env.JWT_SECRET, {
+  algorithm: <span class="c-string">'HS256'</span>
+});
 
-    <h2 id="code">Extraits de code</h2>
-    <p>Structure du projet :</p>
-<pre><code>casseur-mdp/
-├── main.py              ← Point d'entrée principal
-├── modules/
-│   ├── dictionnaire.py  ← Attaque par dictionnaire
-│   ├── bruteforce.py    ← Génération de combinaisons
-│   └── mutation.py      ← Règles de transformation
-├── wordlists/
-│   └── rockyou_mini.txt ← Liste de mots de passe courants
-└── README.md</code></pre>
+<span class="c-comment">// Contenu du QR Code → {"token": "eyJhbGci..."}</span>
+<span class="c-comment">// Aucun montant, aucun rôle, aucune permission exposée.</span>
 
-    <p>Module d'attaque par dictionnaire :</p>
-<pre><code><span class="c-keyword">import</span> hashlib
+<span class="c-comment">// Côté serveur — vérification lors du scan</span>
+<span class="c-keyword">try</span> {
+  <span class="c-keyword">const</span> decoded = jwt.verify(token, process.env.JWT_SECRET);
+  <span class="c-keyword">const</span> transaction = <span class="c-keyword">await</span> db.getTransaction(decoded.txid);
+  <span class="c-comment">// ↑ Les vraies données viennent de la base, pas du QR Code</span>
+} <span class="c-keyword">catch</span>(e) {
+  <span class="c-comment">// Token falsifié ou expiré → rejet immédiat</span>
+  res.status(<span class="c-num">401</span>).json({ error: <span class="c-string">"QR Code invalide ou expiré"</span> });
+}</code></pre>
 
-<span class="c-keyword">def</span> <span class="c-func">attaque_dictionnaire</span>(hash_cible, fichier_dico):
-    <span class="c-string">"""Teste chaque mot du dictionnaire contre le hash cible."""</span>
-    <span class="c-keyword">with</span> <span class="c-func">open</span>(fichier_dico, <span class="c-string">'r'</span>, encoding=<span class="c-string">'utf-8'</span>, errors=<span class="c-string">'ignore'</span>) <span class="c-keyword">as</span> f:
-        <span class="c-keyword">for</span> ligne <span class="c-keyword">in</span> f:
-            mot = ligne.<span class="c-func">strip</span>()
-            hash_test = hashlib.<span class="c-func">md5</span>(mot.<span class="c-func">encode</span>()).<span class="c-func">hexdigest</span>()
-            <span class="c-keyword">if</span> hash_test == hash_cible:
-                <span class="c-keyword">return</span> mot  <span class="c-comment"># Mot de passe trouvé !</span>
-    <span class="c-keyword">return</span> <span class="c-keyword">None</span>  <span class="c-comment"># Non trouvé dans le dictionnaire</span></code></pre>
-
-    <p>Module brute force avec <code>itertools</code> :</p>
-<pre><code><span class="c-keyword">import</span> itertools
-<span class="c-keyword">import</span> string
-
-<span class="c-keyword">def</span> <span class="c-func">brute_force</span>(hash_cible, longueur_max=<span class="c-number">6</span>):
-    <span class="c-string">"""Génère toutes les combinaisons jusqu'à longueur_max."""</span>
-    charset = string.ascii_lowercase + string.digits
-    <span class="c-keyword">for</span> longueur <span class="c-keyword">in</span> <span class="c-func">range</span>(<span class="c-number">1</span>, longueur_max + <span class="c-number">1</span>):
-        <span class="c-keyword">for</span> combo <span class="c-keyword">in</span> itertools.<span class="c-func">product</span>(charset, repeat=longueur):
-            mot = <span class="c-string">''</span>.<span class="c-func">join</span>(combo)
-            <span class="c-keyword">if</span> hashlib.<span class="c-func">md5</span>(mot.<span class="c-func">encode</span>()).<span class="c-func">hexdigest</span>() == hash_cible:
-                <span class="c-keyword">return</span> mot
-    <span class="c-keyword">return</span> <span class="c-keyword">None</span></code></pre>
-
-    <hr class="sep" />
-
-    <h2 id="resultats">Résultats & Tests</h2>
-    <p>
-      Les tests ont été effectués sur une machine virtuelle Kali Linux, 
-      avec une liste de hashes <code>MD5</code> générés localement à partir de mots de passe connus.
-    </p>
-    <ul>
-      <li><strong>Mots de passe simples (&lt; 6 car.) :</strong> retrouvés en moins de 2 secondes</li>
-      <li><strong>Mots du dictionnaire :</strong> 95 % retrouvés en moins d'une minute</li>
-      <li><strong>Avec mutations :</strong> +12 % de taux de succès supplémentaire</li>
-      <li><strong>Mots complexes (&gt; 10 car. mixtes) :</strong> non retrouvés (temps prohibitif sans GPU)</li>
-    </ul>
     <div class="info-box">
-      <strong>Conclusion des tests :</strong> Un mot de passe d'au moins 12 caractères combinant 
-      majuscules, minuscules, chiffres et symboles résiste efficacement à toutes les attaques testées. 
-      L'usage d'un gestionnaire comme <strong>KeePass</strong> est fortement recommandé.
+      <strong>Pourquoi ça protège :</strong> si un attaquant modifie le token,
+      la signature HMAC-SHA256 ne correspond plus. Le serveur rejette le QR Code
+      falsifié instantanément, sans même chercher la transaction en base.
+    </div>
+
+    <h3 id="expiration">Durée de vie limitée — TTL court</h3>
+    <p>
+      Un QR Code sans expiration est exploitable indéfiniment après capture.
+      Un TTL de <strong>5 à 10 minutes</strong> réduit drastiquement la fenêtre d'exploitation.
+    </p>
+
+<pre><code><span class="c-comment"># Python — génération avec expiration courte</span>
+<span class="c-keyword">import</span> jwt, datetime
+
+payload = {
+    <span class="c-string">"txid"</span>: <span class="c-string">"TXN-20260607-0042"</span>,
+    <span class="c-string">"iat"</span>:  datetime.datetime.utcnow(),
+    <span class="c-string">"exp"</span>:  datetime.datetime.utcnow() + datetime.timedelta(minutes=<span class="c-num">5</span>)
+}
+token = jwt.encode(payload, <span class="c-string">os.getenv("JWT_SECRET")</span>, algorithm=<span class="c-string">"HS256"</span>)
+
+<span class="c-comment"># Vérification — exception levée automatiquement si expiré</span>
+<span class="c-keyword">try</span>:
+    decoded = jwt.decode(token, secret, algorithms=[<span class="c-string">"HS256"</span>])
+<span class="c-keyword">except</span> jwt.ExpiredSignatureError:
+    <span class="c-keyword">return</span> {<span class="c-string">"error"</span>: <span class="c-string">"QR Code expiré"</span>}, <span class="c-num">401</span>
+<span class="c-keyword">except</span> jwt.InvalidTokenError:
+    <span class="c-keyword">return</span> {<span class="c-string">"error"</span>: <span class="c-string">"QR Code invalide"</span>}, <span class="c-num">401</span></code></pre>
+
+    <h3 id="chiffrement">Chiffrement JWE — confidentialité totale</h3>
+    <p>
+      JWT signe les données (intégrité) mais ne les chiffre pas (confidentialité).
+      <strong>JWE</strong> (JSON Web Encryption) chiffre le payload :
+      même le contenu du token devient illisible sans la clé privée du serveur.
+    </p>
+
+<pre><code><span class="c-comment">// JWE — chiffrement RSA-OAEP + AES-256-GCM (Node.js / jose)</span>
+<span class="c-keyword">const</span> { CompactEncrypt } = require(<span class="c-string">'jose'</span>);
+
+<span class="c-keyword">const</span> jwe = <span class="c-keyword">await new</span> CompactEncrypt(
+    <span class="c-keyword">new</span> TextEncoder().encode(JSON.stringify(payload))
+  )
+  .setProtectedHeader({
+    alg: <span class="c-string">'RSA-OAEP-256'</span>,  <span class="c-comment">// chiffrement de la clé symétrique</span>
+    enc: <span class="c-string">'A256GCM'</span>         <span class="c-comment">// chiffrement du contenu (AES-256)</span>
+  })
+  .encrypt(publicKey);
+
+<span class="c-comment">// Le QR Code contient un blob entièrement chiffré et illisible.</span>
+<span class="c-comment">// Seul le serveur possédant la clé privée peut déchiffrer.</span></code></pre>
+
+    <hr class="sep" />
+
+    <!-- ── DÉMO SÉCURISÉE ── -->
+    <h2 id="demo-secure">Démo — QR Code sécurisé (JWT simulé)</h2>
+    <p>
+      Le même ticket de paiement, encodé correctement. Le QR Code ne contient
+      qu'un token signé avec expiration. Les données critiques n'y figurent pas.
+    </p>
+
+    <div class="demo-block safe">
+      <span class="demo-label safe"><i class="bi bi-shield-lock-fill"></i> Génération sécurisée</span>
+
+      <div class="btn-row" style="margin-bottom:1.2rem;">
+        <button class="btn-demo success" onclick="genSecureQR()">
+          <i class="bi bi-qr-code"></i> Générer le QR Code sécurisé (JWT simulé)
+        </button>
+      </div>
+
+      <div class="demo-grid" id="secure-result" style="display:none;">
+        <div>
+          <p class="demo-col-title">QR Code sécurisé</p>
+          <div class="qr-wrap" id="qr-secure"></div>
+          <div class="status-badge safe">
+            <i class="bi bi-shield-check-fill"></i> Données protégées
+          </div>
+        </div>
+        <div>
+          <p class="demo-col-title">Contenu du QR Code (token JWT)</p>
+          <div class="json-out safe" id="secure-json"></div>
+          <p style="font-size:12px;opacity:.5;margin-top:.5rem;">
+            ↑ Toute altération invalide la signature. Le serveur rejette sans appel.
+          </p>
+        </div>
+      </div>
     </div>
 
     <hr class="sep" />
 
-    <h2 id="limites">Limites & Éthique</h2>
-    <p>Ce projet présente plusieurs limitations importantes :</p>
-    <ul>
-      <li>Performance limitée en Python pur — pas d'accélération GPU</li>
-      <li>Fonctionne uniquement sur des hashes non salés (<code>MD5</code>, <code>SHA1</code>)</li>
-      <li>Wordlists limitées en taille pour des raisons d'espace disque</li>
-      <li>Usage <strong>strictement réservé</strong> aux tests sur ses propres systèmes</li>
-    </ul>
+    <!-- ── RÉCAPITULATIF ── -->
+    <h2 id="mesures-recap">Récapitulatif des bonnes pratiques</h2>
+
+    <div class="bp-grid">
+      <div class="bp-card">
+        <span class="bp-icon">🔏</span>
+        <h4>Signature JWT</h4>
+        <p>Signer chaque token avec HMAC-SHA256 ou RS256. Toute modification invalide la signature.</p>
+      </div>
+      <div class="bp-card">
+        <span class="bp-icon">⏱</span>
+        <h4>Expiration courte (TTL)</h4>
+        <p>Limiter la validité à 5–10 minutes. Un QR capturé devient inutilisable rapidement.</p>
+      </div>
+      <div class="bp-card">
+        <span class="bp-icon">🔐</span>
+        <h4>Chiffrement JWE</h4>
+        <p>Pour les cas très sensibles, chiffrer avec RSA-OAEP + AES-256-GCM. Contenu illisible.</p>
+      </div>
+      <div class="bp-card">
+        <span class="bp-icon">🗄️</span>
+        <h4>Données côté serveur</h4>
+        <p>Ne jamais encoder montants, rôles ou permissions. Stocker uniquement un identifiant opaque.</p>
+      </div>
+      <div class="bp-card">
+        <span class="bp-icon">🔂</span>
+        <h4>Usage unique (nonce)</h4>
+        <p>Invalider le token après sa première utilisation. Empêche la réutilisation d'un QR scanné.</p>
+      </div>
+      <div class="bp-card">
+        <span class="bp-icon">🌐</span>
+        <h4>Validation serveur</h4>
+        <p>Vérifier la signature côté serveur, jamais côté client. Le client ne juge pas sa propre requête.</p>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>Règle d'or :</strong> un QR Code doit être traité comme une entrée utilisateur
+      non fiable, au même titre qu'un paramètre HTTP. La confiance s'établit côté serveur,
+      par vérification cryptographique — jamais par lecture directe du contenu.
+    </div>
 
     <hr class="sep" />
 
+    <!-- ── CONCLUSION ── -->
     <h2 id="conclusion">Conclusion</h2>
     <p>
-      Ce projet m'a permis de comprendre concrètement les mécanismes d'attaque sur les mots de passe 
-      et l'importance de politiques de sécurité rigoureuses. Il illustre parfaitement pourquoi 
-      l'utilisation d'un gestionnaire de mots de passe comme <strong>KeePass</strong> et 
-      l'adoption d'une politique de mots de passe forts sont indispensables dans tout 
-      environnement professionnel ou personnel.
+      Ce projet démontre qu'encoder des données critiques en clair dans un QR Code revient
+      à laisser les clés du système entre les mains de l'utilisateur. L'attaque est triviale,
+      ne nécessite aucun outil spécialisé, et peut avoir des conséquences graves :
+      élévation de privilèges, fraude financière, contournement de contrôle d'accès.
     </p>
     <p>
-      Ce projet s'inscrit dans ma démarche globale d'apprentissage du pentest et du hacking éthique, 
-      en combinant compréhension théorique des attaques et implémentation pratique des outils.
+      La solution n'est pas de ne plus utiliser les QR Codes, mais de les utiliser correctement :
+      comme un <strong>vecteur de transport d'une référence signée</strong>, et non comme
+      un conteneur de données sensibles. L'architecture cible est claire :
+      <strong>JWT signé + TTL court + données en base</strong>.
+      Pour les cas les plus sensibles, <strong>JWE</strong> ajoute une couche de confidentialité.
+    </p>
+    <p>
+      Ces principes s'appliquent à tout système utilisant des QR Codes :
+      paiements mobiles, contrôle d'accès physique, tickets d'événements, authentification 2FA.
     </p>
 
-    <!-- Navigation bas de page -->
+    <!-- Navigation -->
     <div class="projet-footer-nav">
       <a href="../index.html#projets" class="btn-back">
         <i class="bi bi-arrow-left"></i> Retour aux projets
@@ -237,29 +735,155 @@
     <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" alt="cybersécurité icon"/>
   </div>
   <p class="footer-main">
-    Conçu &amp; développé par <span>DOLI B. Bernard</span> — 
+    Conçu &amp; développé par <span>DOLI B. Bernard</span> —
     Ingénieur Cybersécurité | Pentester | Investigateur numérique
   </p>
   <p class="footer-sub">Sécuriser aujourd'hui, protéger demain</p>
 </footer>
 
-<!-- Sommaire actif au scroll -->
+<!-- ======= SCRIPTS ======= -->
 <script>
-  const links = document.querySelectorAll('#toc-list a');
-  const ids = Array.from(links).map(a => a.getAttribute('href').slice(1));
-  const sections = ids.map(id => document.getElementById(id)).filter(Boolean);
+/* ── État global ── */
+let vulnData = null;
 
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        links.forEach(a => a.classList.remove('active'));
-        const a = document.querySelector(`#toc-list a[href="#${e.target.id}"]`);
-        if (a) a.classList.add('active');
-      }
-    });
-  }, { rootMargin: '-15% 0px -75% 0px' });
+/* ── Utilitaires ── */
+function clearEl(id) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = '';
+}
 
-  sections.forEach(s => obs.observe(s));
+function makeQR(containerId, text) {
+  clearEl(containerId);
+  new QRCode(document.getElementById(containerId), {
+    text: text,
+    width: 144, height: 144,
+    colorDark: "#000000", colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.M
+  });
+}
+
+function syntaxHL(obj) {
+  return JSON.stringify(obj, null, 2)
+    .replace(/"([^"]+)":/g, '<span class="c-key">"$1"</span>:')
+    .replace(/: "([^"]+)"/g, ': <span class="c-str">"$1"</span>')
+    .replace(/: (\d+(\.\d+)?)/g, ': <span class="c-num">$1</span>')
+    .replace(/: (true|false|null)/g, ': <span class="c-val">$1</span>');
+}
+
+/* ── DÉMO 1 : QR vulnérable ── */
+function genVulnQR() {
+  const data = {
+    user:    document.getElementById('f-user').value    || "amadou.diallo",
+    role:    document.getElementById('f-role').value    || "user",
+    montant: parseInt(document.getElementById('f-montant').value) || 15000,
+    devise:  "XOF",
+    txid:    document.getElementById('f-txid').value    || "TXN-20260607-0042",
+    valide:  true
+  };
+  vulnData = data;
+  const jsonStr = JSON.stringify(data, null, 2);
+
+  document.getElementById('vuln-result').style.display = 'grid';
+  makeQR('qrcode', jsonStr);
+  document.getElementById('vuln-json').innerHTML = syntaxHL(data);
+  document.getElementById('attack-json').value = jsonStr;
+}
+
+/* ── DÉMO 2 : Exploitation ── */
+function loadVulnJSON() {
+  if (!vulnData) { alert('Générez d\'abord le QR Code vulnérable ci-dessus.'); return; }
+  document.getElementById('attack-json').value = JSON.stringify(vulnData, null, 2);
+}
+
+function injectAdmin() {
+  try {
+    const obj = JSON.parse(document.getElementById('attack-json').value);
+    obj.role = "admin";
+    document.getElementById('attack-json').value = JSON.stringify(obj, null, 2);
+  } catch(e) { alert('JSON invalide — vérifiez la syntaxe.'); }
+}
+
+function injectMontant() {
+  try {
+    const obj = JSON.parse(document.getElementById('attack-json').value);
+    obj.montant = 1;
+    document.getElementById('attack-json').value = JSON.stringify(obj, null, 2);
+  } catch(e) { alert('JSON invalide — vérifiez la syntaxe.'); }
+}
+
+function genFakeQR() {
+  let fakeData;
+  try {
+    fakeData = JSON.parse(document.getElementById('attack-json').value);
+  } catch(e) { alert('JSON invalide — vérifiez la syntaxe.'); return; }
+
+  document.getElementById('fake-result').style.display = 'grid';
+  makeQR('qr-fake', JSON.stringify(fakeData, null, 2));
+
+  // Calcul du diff
+  const orig = vulnData || {};
+  const lines = [];
+  const allKeys = new Set([...Object.keys(orig), ...Object.keys(fakeData)]);
+  for (const k of allKeys) {
+    if (JSON.stringify(orig[k]) !== JSON.stringify(fakeData[k])) {
+      lines.push(`⚠ Champ modifié : "${k}"\n   ORIGINAL → ${JSON.stringify(orig[k])}\n   FALSIFIÉ → ${JSON.stringify(fakeData[k])}`);
+    }
+  }
+  const diffEl = document.getElementById('diff-output');
+  if (lines.length === 0) {
+    diffEl.textContent = '(aucune modification détectée par rapport à l\'original)';
+    diffEl.className = 'json-out safe';
+  } else {
+    diffEl.textContent = lines.join('\n\n');
+    diffEl.className = 'json-out diff';
+  }
+}
+
+/* ── DÉMO 3 : QR sécurisé ── */
+function genSecureQR() {
+  // Simulation d'un JWT (structure réaliste — pas de vraie crypto côté client)
+  const h = btoa(JSON.stringify({alg:"HS256",typ:"JWT"}))
+              .replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const exp = Math.floor(Date.now() / 1000) + 300;
+  const iat = Math.floor(Date.now() / 1000);
+  const p = btoa(JSON.stringify({txid:"TXN-20260607-0042", iat, exp}))
+              .replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const s = btoa("HMAC_SHA256_COMPUTED_BY_SERVER_ONLY")
+              .replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_').slice(0,43);
+  const token = `${h}.${p}.${s}`;
+  const qrContent = JSON.stringify({ token });
+  const expTime = new Date(exp * 1000).toLocaleTimeString('fr-FR');
+
+  document.getElementById('secure-result').style.display = 'grid';
+  makeQR('qr-secure', qrContent);
+
+  document.getElementById('secure-json').textContent =
+    `{ "token": "${token.slice(0,30)}..." }\n\n` +
+    `── Ce que le serveur vérifie ────────────\n` +
+    `✓ Signature HMAC-SHA256 valide\n` +
+    `✓ Expire à : ${expTime}  (dans 5 min)\n` +
+    `✓ Aucune donnée critique exposée\n\n` +
+    `── Ce que l'attaquant voit ──────────────\n` +
+    `✗ Impossible de modifier sans invalider\n` +
+    `✗ Toute altération → rejet serveur`;
+}
+
+/* ── TOC scroll spy ── */
+const links    = document.querySelectorAll('#toc-list a');
+const ids      = Array.from(links).map(a => a.getAttribute('href').slice(1));
+const sections = ids.map(id => document.getElementById(id)).filter(Boolean);
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(a => a.classList.remove('active'));
+      const a = document.querySelector(`#toc-list a[href="#${e.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px' });
+
+sections.forEach(s => obs.observe(s));
 </script>
 
 </body>
