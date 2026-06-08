@@ -250,7 +250,7 @@
       <span class="projet-tag">Sécurité offensive</span>
     </div>
     <p class="projet-intro">
-      Les QR Codes sont omniprésents — paiements, contrôle d'accès, authentification.
+      Les QR Codes sont omniprésents : paiements, contrôle d'accès, authentification.
       Encoder des données critiques en clair expose les systèmes à des attaques triviales
       de falsification. Ce projet démontre le vecteur d'attaque de bout en bout,
       et propose les contre-mesures cryptographiques appropriées.
@@ -290,11 +290,10 @@
     <!-- ── INTRODUCTION ── -->
     <h2 id="introduction">Introduction</h2>
     <p>
-      Un QR Code est simplement l'encodage visuel d'une chaîne de caractères.
-      N'importe qui disposant d'un smartphone peut lire, copier et modifier ce contenu
-      en quelques secondes. Lorsque des applications y stockent des données sensibles —
-      montant d'un paiement, rôle utilisateur, identifiant de session — elles remettent
-      de facto le contrôle à l'utilisateur final.
+      Un QR Code est simplement l'encodage visuel d'une chaîne de caractères. N'importe qui disposant d'un 
+      lecteur (de code qr appropriés, voire smartphone) peut lire, copier et modifier ce contenu. Lorsque des 
+      applications y stockent des données sensibles, montant d'un paiement, rôle utilisateur, identifiant de session,
+      elles remettent de facto le contrôle à l'utilisateur final.
     </p>
     <p>
       Ce projet explore trois axes : <strong>pourquoi c'est dangereux</strong>,
@@ -311,7 +310,8 @@
     <p>
       Contrairement à ce que son aspect visuel peut laisser croire, un QR Code n'offre
       <strong>aucune confidentialité et aucune intégrité</strong> par lui-même.
-      Il encode une chaîne de caractères — souvent du JSON — lisible par n'importe quel lecteur.
+      Il encode une chaîne de caractères, souvent du JSON, XML ou tout autres format lisible par n'importe 
+      quel lecteur.
     </p>
 
     <div class="schema-row">
@@ -319,30 +319,19 @@
         <p class="card-label"><i class="bi bi-x-circle-fill"></i> QR Code vulnérable</p>
 <pre><code>{
   <span class="c-key">"user_id"</span>: <span class="c-str">"1042"</span>,
-  <span class="c-key">"role"</span>:    <span class="c-val">"admin"</span>,
-  <span class="c-key">"montant"</span>: <span class="c-num">15000</span>,
+  <span class="c-key">"nom"</span>:    <span class="c-val">"paul"</span>,
+  <span class="c-key">"prenom"</span>:    <span class="c-val">"DUPON"</span>,
+  <span class="c-key">"solde"</span>: <span class="c-num">1500</span>,
   <span class="c-key">"devise"</span>:  <span class="c-str">"XOF"</span>,
   <span class="c-key">"valide"</span>:  <span class="c-val">true</span>
 }</code></pre>
       </div>
-      <div class="schema-card good">
-        <p class="card-label"><i class="bi bi-check-circle-fill"></i> QR Code sécurisé</p>
-<pre><code>{
-  <span class="c-key">"token"</span>: <span class="c-str">"eyJhbGci
-OiJIUzI1NiJ9
-.eyJ0eGlkIjoi
-VFhOLTQ0MiIs
-ImV4cCI6MTc1
-MTMzNzYwMH0
-.mK9xR2vTpL..."</span>
-}</code></pre>
-      </div>
+
     </div>
 
     <p>
-      Dans le premier cas, toutes les données sont lisibles et modifiables sans aucun outil.
-      Dans le second, le QR Code ne contient qu'un <strong>token JWT signé</strong> —
-      les données réelles vivent côté serveur, protégées par une signature cryptographique.
+      Toutes les données sont lisibles et modifiables. Ce QR Code ne contient aucune mesure de
+      sécurité. Les données réelles doivent être stocker uniquement côté serveur.
     </p>
 
     <div class="warn-box">
@@ -358,21 +347,24 @@ MTMzNzYwMH0
         <div class="step-num">1</div>
         <div class="step-body">
           <strong>Scan et extraction</strong>
-          <span>L'attaquant scanne le QR Code avec n'importe quel lecteur (smartphone, ZBar, Python). Il obtient le JSON en clair en moins d'une seconde — aucun outil spécialisé requis.</span>
+          <span>L'attaquant scanne le QR Code avec n'importe quel lecteur (smartphone, ZBar, Python). 
+            Il obtient les informations en clair.</span>
         </div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
         <div class="step-body">
           <strong>Modification des données critiques</strong>
-          <span>Il édite le JSON : change <code>"role":"user"</code> en <code>"role":"admin"</code>, ou <code>"montant":15000</code> en <code>"montant":1</code>. Un simple éditeur de texte suffit.</span>
+          <span>Il édite les informations : change <code>"role":"user"</code> en <code>"role":"admin"</code>, 
+            ou <code>"solde":1500</code> en <code>"solde":2000000</code>. Un simple éditeur de texte suffit.</span>
         </div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
         <div class="step-body">
           <strong>Regénération du QR Code falsifié</strong>
-          <span>Il encode le JSON modifié dans un nouveau QR Code (qrcode.js, Python, apps mobiles). Le résultat est visuellement identique à l'original — impossible à distinguer à l'œil nu.</span>
+          <span>Il encode les nouvelles informations modifié dans un nouveau QR Code (qrcode.js, apps mobiles). 
+            Le résultat est visuellement identique à l'original.</span>
         </div>
       </div>
     </div>
@@ -397,6 +389,8 @@ MTMzNzYwMH0
     <p>
       Configurez les données du ticket de paiement. Observez que toutes les informations
       critiques seront encodées lisiblement dans le QR Code, sans aucune protection.
+      En cliquant sur : <strong>GÉNÉRER LE CODE QR VULNERABLE</strong>  vous obtiendrez un QR Code mais vulnérable, 
+      car facilement modifiable. 
     </p>
 
     <div class="demo-block vuln">
@@ -405,7 +399,7 @@ MTMzNzYwMH0
       <div class="fields-row">
         <div class="field-g">
           <label>Utilisateur</label>
-          <input type="text" id="f-user" value="amadou.diallo"/>
+          <input type="text" id="f-user" value="paul.dupon"/>
         </div>
         <div class="field-g">
           <label>Rôle</label>
@@ -416,7 +410,7 @@ MTMzNzYwMH0
           </select>
         </div>
         <div class="field-g">
-          <label>Montant (XOF)</label>
+          <label>solde (XOF)</label>
           <input type="number" id="f-montant" value="15000"/>
         </div>
         <div class="field-g">
@@ -461,23 +455,20 @@ MTMzNzYwMH0
 
       <p class="demo-col-title" style="margin-bottom:.5rem;">JSON extrait du QR Code (modifiable directement)</p>
       <textarea class="json-editor" id="attack-json">{
-  "user": "amadou.diallo",
+  "user": "paul.dupon",
   "role": "user",
-  "montant": 15000,
+  "solde": 15000,
   "devise": "XOF",
   "txid": "TXN-20260607-0042",
   "valide": true
 }</textarea>
 
       <div class="btn-row">
-        <button class="btn-demo primary" onclick="loadVulnJSON()">
-          <i class="bi bi-arrow-down-circle"></i> Charger depuis le QR ci-dessus
-        </button>
         <button class="btn-demo danger" onclick="injectAdmin()">
           <i class="bi bi-person-fill-lock"></i> Injecter role: admin
         </button>
         <button class="btn-demo danger" onclick="injectMontant()">
-          <i class="bi bi-currency-dollar"></i> Falsifier montant → 1 XOF
+          <i class="bi bi-currency-dollar"></i> Falsifier solde → 1500000 XOF
         </button>
       </div>
       <div class="btn-row" style="margin-top:.5rem;">
