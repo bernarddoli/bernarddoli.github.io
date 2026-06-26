@@ -63,12 +63,19 @@
       <li><a href="#introduction">Introduction</a></li>
       <li><a href="#contexte">Contexte & Objectifs</a></li>
       <li><a href="#fonctionnement">Fonctionnement</a></li>
-      <li class="toc-sub"><a href="#dictionnaire">Attaque par dictionnaire</a></li>
-      <li class="toc-sub"><a href="#bruteforce">Brute force</a></li>
-      <li class="toc-sub"><a href="#mutation">Règles de mutation</a></li>
-      <li><a href="#code">Extraits de code</a></li>
+      <li class="toc-sub"><a href="#architecture">Architecture de la solution</a></li>
+      <li><a href="#implementation">Implementation technique</a></li>
+      <li class="toc-sub"><a href="#prerequis">Prérequis sur les deux serveurs</a></li>
+      <li class="toc-sub"><a href="#authentification">Authentification SSH sans mot de passe</a></li>
+      <li class="toc-sub"><a href="#conectivite">Test de connectivé entre Server1 vers Server2</a></li>
+      <li class="toc-sub"><a href="#repertoire">Repertoires de synchronisation</a></li>
+      <li class="toc-sub"><a href="#testManuel">Test de synchronisation manuel</a></li>
+      <li class="toc-sub"><a href="#configuration">Configuration lsyncd sur le server1</a></li>
+      <li class="toc-sub"><a href="#DemarrerService">Démarrer et activer lsyncd</a></li>
       <li><a href="#resultats">Résultats & Tests</a></li>
-      <li><a href="#limites">Limites & Éthique</a></li>
+      <li><a href="#limites">Perspectives</a></li>
+      <li class="toc-sub"><a href="#deuxSource">Deux sources vers une destionation</a></li>
+      <li class="toc-sub"><a href="#plusieursServeurs">une source vers plusieurs serveurs distant</a></li>
       <li><a href="#conclusion">Conclusion</a></li>
     </ul>
   </aside>
@@ -121,7 +128,7 @@
       <li>Les fichiers sont alors répliqués vers un serveur distant ou un autre répertoire local</li>
     </ul>
 
-    <h3 id="mutation">Architecture de la solution</h3>
+    <h3 id="architecture">Architecture de la solution</h3>
     <p>
       Structure pour une synchronisation mono-directionnelle (Serveur1 vers serveur2)
     </p>
@@ -140,7 +147,7 @@
 
     <hr class="sep" />
 
-    <h2 id="code">Implementation technique</h2>
+    <h2 id="implementation" >Implementation technique</h2>
     <p>Structure pour une synchronisation mono-directionnelle (Serveur1 vers serveur2) </p>
     <h3 id="prerequis">Prérequis sur les deux serveurs</h3> 
     <p>Sur Serveur1 (192.168.100.225) et Serveur2 (192.168.100.226), nous allons installé lsyncd avec les permissions root</p> 
@@ -187,7 +194,7 @@
   consequence dangereux. Pour pallier a cela on peut faire une copie manuel depuis le Serveur 2 dans <code>/root/.ssh</code>.
 </div>
 
-<h3 id="répertoire">Repertoires de synchronisation</h3>
+<h3 id="repertoire">Repertoires de synchronisation</h3>
 <p>Sur le Sur Server1, nous allons creer le(s) repertoire(s) source que nous voulions synchroniser sur le server2 au cas où 
   ce(s) repertoire(s) n'existe(nt) pas. Dans notre cas, creons <code>demo1</code> et <code>demo2</code> </p>
 <pre><code><span class="c-keyword">mkdir</span> -p /home/user1/demo1
@@ -198,7 +205,7 @@
 <pre><code><span class="c-keyword">mkdir</span> -p /home/user2/rep-sync1
 <span class="c-keyword">mkdir</span> -p /home/user2/rep-sync2</span></code></pre>
 
-<h3 id="test manuel">Test de synchronisation manuel</h3> 
+<h3 id="testManuel">Test de synchronisation manuel</h3> 
 <p>Avant de configurer lsyncd, nous allons vérifier que rsync fonctionne bien sur les deux servers. 
   Sur Serveur 1, nous allons creer du contenu et tester la synchronisation.
 </p>
@@ -222,7 +229,7 @@
   <code>/home/user2/rep-sync1</code> doivent avoir le meme contenu due a synchronisation.
 </p>
 
-<h3 id="configuration">lsyncd sur le server1</h3> 
+<h3 id="configuration">Configuration lsyncd sur le server1</h3> 
 <p>Crée le fichier de configuration</p> 
 <pre><code><span class="c-keyword">mkdir -p /etc/lsyncd</span>
 <span class="c-keyword">nano /etc/lsyncd/lsyncd.conf.lua</span>
@@ -267,7 +274,7 @@
 </p>
 
 
-<h3 id="Demarrer le service">Démarrer et activer lsyncd</h3>
+<h3 id="DemarrerService">Démarrer et activer lsyncd</h3>
 
 <pre><code><span class="c-comment"># Démarrer le service</span>
 <span class="c-keyword">systemctl start lsyncd</span>
@@ -299,9 +306,9 @@
 
     <hr class="sep" />
 
-    <h2 id="limites">Limites & Éthique</h2>
+    <h2 id="limites">Perspectives</h2>
 
-    <h3 id="Demarrer le service">Deux sources vers une destionation</h3>
+    <h3 id="deuxSource">Deux sources vers une destionation</h3>
 
 <pre><code>  Serveur 1                        
 /home/user1/demo1/  ─────┐            Server2
@@ -336,7 +343,7 @@
 
 
 
-<h3 id="Demarrer le service">une source vers une plusieur serveurs distant</h3>
+<h3 id="plusieursServeurs">une source vers plusieurs serveurs distant</h3>
 <p>
   Synchronisation vers 4 machines simultanément. Il suffit d'ajouter un bloc sync par machine.
   chaque bloc est indépendant. /etc/lsyncd/lsyncd.conf.lua
