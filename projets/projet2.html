@@ -244,7 +244,7 @@
     nodaemon   = <span class="c-func">false,</span>
     statusInterval = <span class="c-number"> 5,</span>
 }
-<span class="c-comment"># BLOC-2 demo1 vers rep-sync1</span>
+<span class="c-comment"># BLOC-1 demo1 vers rep-sync1</span>
 <span class="c-keyword">sync</span> {
     default.rsync,
     source  = <span class="c-func">"/home/user1/demo1/",</span>
@@ -256,7 +256,7 @@
         rsh      = <span class="c-func">"ssh -i /root/.ssh/id_sync -o StrictHostKeyChecking=no"</span>
     }
 }
-<span class="c-comment"># BLOC-1 demo2 vers rep-sync2</span>
+<span class="c-comment"># BLOC-2 demo2 vers rep-sync2</span>
 <span class="c-keyword">sync</span> {
     default.rsync,
     source  = <span class="c-func">"/home/user1/demo2/",</span>
@@ -287,22 +287,21 @@
 
     <hr class="sep" />
 
-    <h2 id="resultats">Résultats & Tests</h2>
+    <h2 id="resultats">Résultats</h2>
     <p>
       Les tests ont été effectués sur une machine virtuelle Kali Linux, 
       avec une liste de hashes <code>MD5</code> générés localement à partir de mots de passe connus.
+
+      Une fois le daemon lsyncd démarré sur les serveurs, toute modification détectée dans les répertoires 
+      <code>demo1</code> et <code>demo2</code> sera automatiquement synchronisée vers <code>rep-sync1</code> et
+      <code>rep-sync2</code> en temps réel.
     </p>
-    <ul>
-      <li><strong>Mots de passe simples (&lt; 6 car.) :</strong> retrouvés en moins de 2 secondes</li>
-      <li><strong>Mots du dictionnaire :</strong> 95 % retrouvés en moins d'une minute</li>
-      <li><strong>Avec mutations :</strong> +12 % de taux de succès supplémentaire</li>
-      <li><strong>Mots complexes (&gt; 10 car. mixtes) :</strong> non retrouvés (temps prohibitif sans GPU)</li>
-    </ul>
-    <div class="info-box">
+    <!-- <div class="info-box">
       <strong>Conclusion des tests :</strong> Un mot de passe d'au moins 12 caractères combinant 
       majuscules, minuscules, chiffres et symboles résiste efficacement à toutes les attaques testées. 
       L'usage d'un gestionnaire comme <strong>KeePass</strong> est fortement recommandé.
-    </div>
+    </div> -->
+
 
     <hr class="sep" />
 
