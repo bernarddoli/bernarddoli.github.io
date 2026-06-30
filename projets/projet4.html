@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OSINT - DOLI B. Bernard</title>
+  <title>Haute disponibilité — DOLI B. Bernard</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,22 +33,21 @@
       <span>›</span>
       <a href="../index.html#projets">Projets</a>
       <span>›</span>
-      OSINT
+      Haute disponibilité e-commerce
     </p>
-    <h1>OSINT</h1>
+    <h1>Haute disponibilité d'un site e-commerce</h1>
     <div class="projet-meta">
-      <span class="projet-tag">Application</span>
-      <span class="projet-tag">Android</span>
-      <span class="projet-tag">Sécurité</span>
+      <span class="projet-tag">Redondance</span>
+      <span class="projet-tag">Replication des donnees</span>
+      <span class="projet-tag">systèmes</span>
     </div>
-    <p class="projet-intro">
-      OSINT, pour Open Source INTelligente, en francais .... est une outils puissant dans la recherche d'information
-      via des sources Open source, toute le monde a access.
-    </p>
+    <!-- <p class="projet-intro">
+      Une solution de synchronisation fl
+    </p> -->
   </div>
   <!-- Image de couverture collée au bas du hero -->
   <div class="projet-cover-wrap">
-    <img src="../images/mdp.png" alt="Casseur de mots de passe" />
+    <img src="../images/haute-disponibilite.jpg" alt="" />
   </div>
 </header>
 
@@ -60,15 +59,13 @@
     <p class="projet-toc-title">Sommaire</p>
     <ul id="toc-list">
       <li><a href="#introduction">Introduction</a></li>
-      <li><a href="#contexte">Contexte & Objectifs</a></li>
       <li><a href="#fonctionnement">Fonctionnement</a></li>
-      <li class="toc-sub"><a href="#dictionnaire">Attaque par dictionnaire</a></li>
-      <li class="toc-sub"><a href="#bruteforce">Brute force</a></li>
-      <li class="toc-sub"><a href="#mutation">Règles de mutation</a></li>
-      <li><a href="#code">Extraits de code</a></li>
-      <li><a href="#resultats">Résultats & Tests</a></li>
-      <li><a href="#limites">Limites & Éthique</a></li>
-      <li><a href="#conclusion">Conclusion</a></li>
+      <li class="toc-sub"><a href="#architecture">Architecture de la solution</a></li>
+      <li><a href="#implementation">Implementation technique</a></li>
+      <li class="toc-sub"><a href="#prerequis">Installation sur les deux serveurs</a></li>
+      <li class="toc-sub"><a href="#verification">Vérification de l'address IP virtuelle - VIP</a></li>
+      <li><a href="#test">Test de la solution</a></li>
+      <li><a href="#limites">Perspectives</a></li>
     </ul>
   </aside>
 
@@ -77,152 +74,337 @@
 
     <h2 id="introduction">Introduction</h2>
     <p>
-      Ce projet a été développé dans le cadre de mon apprentissage du hacking éthique.
-      L'objectif est de comprendre <strong>comment les attaquants tentent de retrouver 
-      des mots de passe</strong>, afin de mieux défendre les systèmes contre ces techniques.
+      La disponibilité permanente d'une plateforme de commerce électronique constitue un enjeu critique : 
+      toute interruption de service, même brève, entraîne une perte de revenus, une dégradation de l'expérience 
+      utilisateur et une atteinte à la confiance des clients. Dans ce contexte, 
+      <strong>la haute disponibilité (High Availability)</strong> n'est plus une option mais une exigence 
+      fondamentale de toute infrastructure de production.
     </p>
-    <div class="warn-box">
+    <!-- <div class="warn-box">
       <strong>⚠ Avertissement :</strong> Cet outil est réalisé dans un cadre légal et 
       pédagogique uniquement. Tout test doit être effectué sur des systèmes vous appartenant 
       ou pour lesquels vous disposez d'une autorisation écrite explicite.
-    </div>
-
-    <hr class="sep" />
-
-    <h2 id="contexte">Contexte & Objectifs</h2>
-    <p>
-      Dans le cadre de ma formation en cybersécurité à l'ESI, j'ai souhaité mettre en pratique 
-      les notions de cryptographie et d'attaques sur les mots de passe. Les objectifs principaux étaient :
-    </p>
-    <ul>
-      <li>Comprendre les différentes méthodes d'attaque sur les mots de passe</li>
-      <li>Implémenter un outil fonctionnel en Python</li>
-      <li>Mesurer la robustesse de différents types de mots de passe</li>
-      <li>Sensibiliser à l'importance des bonnes pratiques de sécurité</li>
-    </ul>
+    </div> -->
 
     <hr class="sep" />
 
     <h2 id="fonctionnement">Fonctionnement</h2>
+
     <p>
-      L'outil est structuré en trois modules principaux, chacun correspondant 
-      à une stratégie d'attaque différente.
+      La présente solution repose sur deux serveurs actifs fonctionnant en mode maître-esclave (failover). 
+      Le serveur vm1, désigné MASTER, assure le traitement de tout le trafic, tandis que le serveur vm2, 
+      en position BACKUP, demeure en veille active et prêt à prendre le relais à tout moment. 
+      Une adresse IP virtuelle (VIP), gérée par le daemon <strong>Keepalived</strong> , flotte entre 
+      les deux serveur et constitue le point d'entrée unique pour les clients. En cas de défaillance du serveur 
+      maître, cette IP est automatiquement transférée vers le serveur de secours en quelques secondes, assurant ainsi 
+      une continuité de service transparente.
     </p>
-
-    <h3 id="dictionnaire">Attaque par dictionnaire</h3>
     <p>
-      L'attaque par dictionnaire teste une liste de mots de passe courants 
-      (noms, dates, mots simples). C'est la méthode la plus rapide et la plus efficace 
-      contre les mots de passe faibles. Elle repose sur des wordlists comme 
-      <code>rockyou.txt</code> qui contiennent des millions d'entrées.
+      Le répartiteur de charge <strong>HAProxy</strong>, distribue les requêtes HTTP entrantes vers les serveurs web 
+      selon un algorithme configurable, tout en supervisant en permanence leur état via des <strong>health checks</strong> 
+      applicatifs : <code>http://192.168.100.200:8404/stats</code> , offrant une visibilité en temps réel sur l'état des composants 
+      et le trafic traité.
     </p>
-
-    <h3 id="bruteforce">Brute force</h3>
-    <p>
-      Le brute force génère toutes les combinaisons possibles de caractères jusqu'à 
-      une longueur définie. Efficace mais exponentiellement lent au-delà de 6-7 caractères 
-      sans ressources GPU.
-    </p>
-
-    <h3 id="mutation">Règles de mutation</h3>
-    <p>
-      Le module de mutation applique des transformations courantes sur les mots du dictionnaire : 
-      substitutions (<code>a→@</code>, <code>e→3</code>, <code>o→0</code>), ajout de chiffres 
-      en fin de mot, mise en majuscule de la première lettre, etc.
-    </p>
-
-    <hr class="sep" />
-
-    <h2 id="code">Extraits de code</h2>
-    <p>Structure du projet :</p>
-<pre><code>casseur-mdp/
-├── main.py              ← Point d'entrée principal
-├── modules/
-│   ├── dictionnaire.py  ← Attaque par dictionnaire
-│   ├── bruteforce.py    ← Génération de combinaisons
-│   └── mutation.py      ← Règles de transformation
-├── wordlists/
-│   └── rockyou_mini.txt ← Liste de mots de passe courants
-└── README.md</code></pre>
-
-    <p>Module d'attaque par dictionnaire :</p>
-<pre><code><span class="c-keyword">import</span> hashlib
-
-<span class="c-keyword">def</span> <span class="c-func">attaque_dictionnaire</span>(hash_cible, fichier_dico):
-    <span class="c-string">"""Teste chaque mot du dictionnaire contre le hash cible."""</span>
-    <span class="c-keyword">with</span> <span class="c-func">open</span>(fichier_dico, <span class="c-string">'r'</span>, encoding=<span class="c-string">'utf-8'</span>, errors=<span class="c-string">'ignore'</span>) <span class="c-keyword">as</span> f:
-        <span class="c-keyword">for</span> ligne <span class="c-keyword">in</span> f:
-            mot = ligne.<span class="c-func">strip</span>()
-            hash_test = hashlib.<span class="c-func">md5</span>(mot.<span class="c-func">encode</span>()).<span class="c-func">hexdigest</span>()
-            <span class="c-keyword">if</span> hash_test == hash_cible:
-                <span class="c-keyword">return</span> mot  <span class="c-comment"># Mot de passe trouvé !</span>
-    <span class="c-keyword">return</span> <span class="c-keyword">None</span>  <span class="c-comment"># Non trouvé dans le dictionnaire</span></code></pre>
-
-    <p>Module brute force avec <code>itertools</code> :</p>
-<pre><code><span class="c-keyword">import</span> itertools
-<span class="c-keyword">import</span> string
-
-<span class="c-keyword">def</span> <span class="c-func">brute_force</span>(hash_cible, longueur_max=<span class="c-number">6</span>):
-    <span class="c-string">"""Génère toutes les combinaisons jusqu'à longueur_max."""</span>
-    charset = string.ascii_lowercase + string.digits
-    <span class="c-keyword">for</span> longueur <span class="c-keyword">in</span> <span class="c-func">range</span>(<span class="c-number">1</span>, longueur_max + <span class="c-number">1</span>):
-        <span class="c-keyword">for</span> combo <span class="c-keyword">in</span> itertools.<span class="c-func">product</span>(charset, repeat=longueur):
-            mot = <span class="c-string">''</span>.<span class="c-func">join</span>(combo)
-            <span class="c-keyword">if</span> hashlib.<span class="c-func">md5</span>(mot.<span class="c-func">encode</span>()).<span class="c-func">hexdigest</span>() == hash_cible:
-                <span class="c-keyword">return</span> mot
-    <span class="c-keyword">return</span> <span class="c-keyword">None</span></code></pre>
-
-    <hr class="sep" />
-
-    <h2 id="resultats">Résultats & Tests</h2>
-    <p>
-      Les tests ont été effectués sur une machine virtuelle Kali Linux, 
-      avec une liste de hashes <code>MD5</code> générés localement à partir de mots de passe connus.
-    </p>
-    <ul>
-      <li><strong>Mots de passe simples (&lt; 6 car.) :</strong> retrouvés en moins de 2 secondes</li>
-      <li><strong>Mots du dictionnaire :</strong> 95 % retrouvés en moins d'une minute</li>
-      <li><strong>Avec mutations :</strong> +12 % de taux de succès supplémentaire</li>
-      <li><strong>Mots complexes (&gt; 10 car. mixtes) :</strong> non retrouvés (temps prohibitif sans GPU)</li>
-    </ul>
     <div class="info-box">
-      <strong>Conclusion des tests :</strong> Un mot de passe d'au moins 12 caractères combinant 
-      majuscules, minuscules, chiffres et symboles résiste efficacement à toutes les attaques testées. 
-      L'usage d'un gestionnaire comme <strong>KeePass</strong> est fortement recommandé.
+      <strong>Quelque algorithme HAProxy courant</strong>
     </div>
-
-    <hr class="sep" />
-
-    <h2 id="limites">Limites & Éthique</h2>
-    <p>Ce projet présente plusieurs limitations importantes :</p>
     <ul>
-      <li>Performance limitée en Python pur — pas d'accélération GPU</li>
-      <li>Fonctionne uniquement sur des hashes non salés (<code>MD5</code>, <code>SHA1</code>)</li>
-      <li>Wordlists limitées en taille pour des raisons d'espace disque</li>
-      <li>Usage <strong>strictement réservé</strong> aux tests sur ses propres systèmes</li>
+      <li><strong>failover : </strong> les requêtes sont envoyées uniquement au serveur principal. Si celui-ci devient 
+        indisponible, HAProxy bascule automatiquement vers un serveur de secours afin d'assurer la continuité du service.</li>
+      <li><strong>roundrobin : </strong> les requêtes sont réparties successivement entre tous les serveurs disponibles, 
+        chacun recevant le même nombre de connexions.</li>
+      <li><strong>Least Connections (leastconn) : </strong> chaque nouvelle connexion est dirigée vers le serveur ayant 
+        le plus faible nombre de connexions actives.</li>
+      <li><strong>Modes de poids (weight) : </strong> chaque serveur se voit attribuer un poids (weight) qui détermine 
+        la proportion de trafic qu'il recevra. Un serveur ayant un poids plus élevé traite davantage de requêtes.
+         ce qui permet d'adapter la répartition selon les capacités matérielles de chaque serveur</li>
     </ul>
 
+    <h3 id="architecture">Architecture de la solution</h3>
+    <pre><code>	  	       Clients
+		      	   |
+	    @IP Virtuelle (192.168.100.200)
+			   |
+		    vm1 est actif ?
+             _____OUI______|_____NON______
+    ________|________               ______|__________
+   |    VM1          │             |    VM2          │  
+   | 192.168.100.134 |             | 192.168.100.132 |		 
+   | MASTER          |             | BACKUP          |        
+   | HAproxy         |             | HAproxy         |
+   | Keepalived      |             | Keepalived      |
+   | Nginx           |             | Nginx           |
+   |_________________|             |_________________|</code></pre>
+
+    <div class="info-box">
+      <strong>Plan de la configuration.</strong>
+    <ul>
+      <li><strong> Address fixe : </strong> il est preferable d'avoir une address IP fixe sur ces deux serveurs, car si
+        l'adresse de l'un des serveur change cela peut annuler les configuration.</li>
+      <li><strong> Virtuelle IP : </strong> cette address peut être du meme reseau (192.168.100.0/24) que les deux
+        serveurs ou d'un reseau different. Ici nous choisirons une address (192.168.100.200) du meme reseau. cette address 
+        ne doit être attribuer a aucun equipement.</li>
+      <li><strong> Port d’écoute HAproxy : </strong> cet port ne doit être attribuer a aucun autre service afin d’éviter
+        un conflit de port. nous allons choisir le port 8080.</li>
+      <li><strong> Algorithme HAproxy : </strong> nous allons choisir ici l'algorithme failover.</li>
+      <li><strong> Priorité Keepalived : </strong> le daemon Keepalived verifie le serveur ayant le plus grand priorité
+        et lui attribue address IP virtuelle.</li>
+    </ul>
+    </div>
     <hr class="sep" />
 
-    <h2 id="conclusion">Conclusion</h2>
-    <p>
-      Ce projet m'a permis de comprendre concrètement les mécanismes d'attaque sur les mots de passe 
-      et l'importance de politiques de sécurité rigoureuses. Il illustre parfaitement pourquoi 
-      l'utilisation d'un gestionnaire de mots de passe comme <strong>KeePass</strong> et 
-      l'adoption d'une politique de mots de passe forts sont indispensables dans tout 
-      environnement professionnel ou personnel.
+    <h2 id="implementation" >Implementation technique</h2>
+    <p>Sur les deux serveurs, certaines configuration seront identique et d'autre différent peu.</p>
+    <h3 id="prerequis">Installation sur les deux serveurs</h3> 
+    <p>Sur le Serveur1 (192.168.100.134) et Serveur2 (192.168.100.132), nous allons installé haproxy et keepalived.</p> 
+    <p></p>
+<pre><code><span class="c-keyword">apt</span> update && <span class="c-keyword">apt</span> upgrade -y
+<span class="c-keyword">apt install -y</span> haproxy keepalived
+<span class="c-comment"># mise à jour du système et installations</span></code></pre>
+
+    <p>Ensuite, nous activons le forwarding IP {definir ca en fr} cela est nécessaire pour Keepalived/VRRP.
+      A ce effet nous allons modifié le fichier <code>/etc/sysctl.conf</code>. {autre role duf fichier /etc/sysctl.conf}
     </p>
+<pre><code><span class="c-keyword">echo</span> "net.ipv4.ip_nonlocal_bind = 1" >> /etc/sysctl.conf
+<span class="c-comment"># -t : Spécifie le type d'algorithme cryptographique à utiliser.<span></code></pre>
+
+  <div class="info-box"><strong> Configuration HAproxy</strong></div>
+  <p>Le fichier de config principal pour HAproxy est : <code>/etc/haproxy/haproxy.cfg</code>. Sur les deux serveurs,
+    nous allons l'editer comme suite : </p>
+
+<pre><code><span class="c-func">global</span>
+    <span class="c-keyword">log</span>  /dev/log local0
+    <span class="c-keyword">log</span>  /dev/log local1 notice
+    <span class="c-keyword">maxconn</span>  50000
+    <span class="c-keyword">user</span>  haproxy
+    <span class="c-keyword">group</span>  haproxy
+    <span class="c-keyword">daemon</span>
+
+<span class="c-func">defaults</span>
+    <span class="c-keyword">log</span>  global
+    <span class="c-keyword">mode</span>  http
+    <span class="c-keyword">option</span>  httplog
+    <span class="c-keyword">option</span>  dontlognull
+    <span class="c-keyword">option</span>  forwardfor
+    <span class="c-keyword">option</span>  http-server-close
+    <span class="c-keyword">timeout connect</span>  5s
+    <span class="c-keyword">timeout client</span>  30s
+    <span class="c-keyword">timeout server</span>  30s
+    <span class="c-keyword">errorfile</span>  503 /etc/haproxy/errors/503.http
+
+<span class="c-comment">#-------------------------------------------------------</span>
+<span class="c-comment"># Frontend : écoute sur la VIP port 8080</span>
+<span class="c-comment">#-------------------------------------------------------</span>
+<span class="c-func">frontend http_front</span>
+    <span class="c-keyword">bind</span> 192.168.100.200:8080
+    <span class="c-keyword">bind</span> 127.0.0.1:8080
+    <span class="c-keyword">default_backend</span>  web_servers
+
+<span class="c-comment">#-------------------------------------------------------</span>
+<span class="c-comment"># Backend : serveurs web - web1: MASTER et web2: BACKUP</span>
+<span class="c-comment">#-------------------------------------------------------</span>
+<span class="c-func">backend web_servers</span>
+    <span class="c-keyword">balance</span>  roundrobin
+    <span class="c-keyword">option</span>  httpchk
+    <span class="c-keyword">http-check send</span> meth GET uri /health ver HTTP/1.1 hdr Host healthcheck
+    <span class="c-keyword">server web1</span>  192.168.100.134:8080 check inter 2s rise 2 fall 3
+    <span class="c-keyword">server web1</span>  192.168.100.132:8080 check inter 2s rise 2 fall 3 backup
+
+<span class="c-comment">#-----------------------------------------------</span>
+<span class="c-comment"># DASHBOARD : http://192.168.100.200:8404/stats</span>
+<span class="c-comment">#-----------------------------------------------</span>
+<span class="c-func">frontend stats</span>
+    <span class="c-keyword">bind</span>  *:8404
+    <span class="c-keyword">stats</span>  enable
+    <span class="c-keyword">stats uri</span> stats uri /stats
+    <span class="c-keyword">stats refresh</span>  10s
+    <span class="c-keyword">stats auth</span>  admin:S3cur3P@ssw0rd
+    <span class="c-keyword">stats</span>  show-node
+</span></code></pre>
+
+<p>
+  Après modification, nous verifier la configuration, avant de lancer le service haproxy avec les commandes : 
+</p> 
+<pre><code><span class="c-keyword">haproxy -c -f</span> /etc/haproxy/haproxy.cfg
+<span class="c-keyword">systemctl enable</span> --now haproxy
+<span class="c-keyword">systemctl reload</span> haproxy</code></pre>
+
+<!-- Configuration de Keepalived -->
+  <div class="info-box"><strong> Configuration Keepalived</strong></div>
+  <p>
+    Le fichier de configuration type pour keepalived est: <code>/etc/keepalived/keepalived.conf.sample</code>. Nous allons 
+    nous inspirer de ce fichier pour creer notre fichier de configuration <code>/etc/keepalived/keepalived.conf</code>.
+    La configuration Keepalived est presque identique sur les deux serveurs. Les differences seront au niveau des 
+    variables suivant : 
+  </p>
+  <ul>
+    <li><strong>router_id : </strong> identifiant unique de l'instance Keepalived, utilisé pour l'identification et les logs.</li>
+    <li><strong>state : </strong> définit le rôle initial au démarrage (MASTER ou BACKUP). </li>
+    <li><strong>priority : </strong> détermine quel serveur sera élu maître lors de l'élection VRRP. La priorité la plus élevée l'emporte. </li>
+  </ul>
+  <p>
+    Sur le serveur1, les variables <code>router_id</code> et <code>state</code> prendrons la valeur <code>MASTER</code> 
+    et une priorité <code>(priority)</code> supérieure a celui de serveur2.
+  </p>
+<pre><code><span class="c-comment">#---------------------------------------------------------</span>
+<span class="c-comment"># CONFIGURATION SERVEUR MAITRE - VM1 192.168.100.134</span>
+<span class="c-comment">#---------------------------------------------------------</span>
+<span class="c-func">global_defs {</span>
+    <span class="c-keyword">router_id</span> LVS_MASTER     <span class="c-comment"># a modifié sur vm2 - BACKUP</span> 
+    <span class="c-keyword">script_user</span> root
+    <span class="c-keyword">enable_script_security</span>
+<span class="c-func">}</span>
+
+<span class="c-func">vrrp_script chk_haproxy {</span>
+    <span class="c-keyword">script</span> "/usr/bin/killall -0 haproxy"
+    <span class="c-keyword">interval</span> 2
+    <span class="c-keyword">weight</span>   -20
+    <span class="c-keyword">fall</span>     2
+    <span class="c-keyword">rise</span>     1
+<span class="c-func">}</span>
+
+<span class="c-func">vrrp_instance VI_WEB {</span>
+    <span class="c-keyword">state</span>             MASTER     <span class="c-comment"># a modifié sur vm2 - BACKUP</span>
+    <span class="c-keyword">interface</span>         ens33
+    <span class="c-keyword">virtual_router_id</span> 51
+    <span class="c-keyword">priority</span>          110     <span class="c-comment"># a modifié sur vm2 - BACKUP</span> 
+    <span class="c-keyword">advert_int</span>        1
+    <span class="c-keyword">preempt_delay</span>     10
+
+    <span class="c-number">authentication</span>  {
+        <span class="c-keyword">auth_type</span> PASS
+        <span class="c-keyword">auth_pass</span> WebHAP@ssw0rd2026!
+    }
+
+    <span class="c-number">virtual_ipaddress</span> {
+        192.168.100.200/24 dev ens33     <span class="c-comment"># ens33 : interface de reseau</span>
+    }
+
+    <span class="c-number">track_script</span> {
+        chk_haproxy
+    }
+
+    <span class="c-keyword">notify_master</span> "/etc/keepalived/notify.sh MASTER"
+    <span class="c-keyword">notify_backup</span> "/etc/keepalived/notify.sh BACKUP"
+    <span class="c-keyword">notify_fault</span>  "/etc/keepalived/notify.sh FAULT"
+<span class="c-func">}</span></code></pre>
+
+  <P>
+    Sur le serveur2 (BACKUP) , le fichier <code>/etc/keepalived/keepalived.conf</code> reste identique, seulement 3 lignes changent. Les variables <code>router_id</code> 
+    et <code>state</code> prendrons la valeur <code>BACKUP</code> et une priorité <code>(priority)</code> inférieure a 
+    celui de serveur1.
+  </p>
+
+<pre><code><span class="c-comment">#---------------------------------------------------------</span>
+<span class="c-comment"># CONFIGURATION SERVEUR BACKUP - VM2 192.168.100.132</span>
+<span class="c-comment">#---------------------------------------------------------</span>
+<span class="c-func">global_defs {</span>
+    <span class="c-keyword">router_id</span>  LVS_BACKUP     <span class="c-comment"># différent</span>
+<span class="c-func">}</span>
+
+<span class="c-func">vrrp_instance VI_WEB {</span>
+    <span class="c-keyword">state</span>    BACKUP     <span class="c-comment"># BACKUP</span>
+    <span class="c-keyword">priority</span> 90     <span class="c-comment"># inférieure a 110</span>
+    <span class="c-comment"># tout le reste identique</span> 
+<span class="c-func">}</span></code></pre>
+
+<p>
+  Après modification, nous demarons le service keepalived avec les commandes suivantes : 
+</p> 
+<pre><code><span class="c-keyword">systemctl enable</span> keepalived
+<span class="c-keyword">systemctl start</span> keepalived</code></pre>
+
+  <h3 id="verification">Vérification de l'address IP virtuelle - VIP</h3>
+  <p>
+    Sur le Sur Server1, nous allons verifier si l'address IP virtuelle a pris effet.
+  </p>
+<pre><code><span class="c-keyword">ip a show</span> ens33 | <span class="c-keyword">grep</span> 192.168.100.200</span>
+<span class="c-comment"># résultat attendu : inet 192.168.100.200/24</span></code></pre>
+
+<p>
+  Pendant que vm1 est actifs, <code>ip a show ens33 | grep 192.168.100.200</code> n'affiche rien sur la vm2 et cela est 
+  normal. Pour verifier que vm2 prend l'address IP virtuelle, on peut stimuler une panne sur vm1 soit en l’éteignant, 
+  soit en le redémarrant. Pendant qu'il est eteint ( ou qu'il n'a pas terminee le proccessus de redemarrage ), tapez 
+  la commande <code>ip a show ens33 | grep 192.168.100.200</code> cette fois-ci, vous aurez <code>inet 192.168.100.200/24</code> 
+</p>
+
+<div class="info-box">
+  <strong>DASHBOARD HAProxy - tableau de bord </strong>
+  <p>
+    accesible via <code>http://192.168.100.200:8404/stats</code> avec les identifiants <code>admin:S3cur3P@ssw0rd</code>. 
+    <span class="c-comment">le port 8404 doit etre ouvert</span></pre >
+  </p>
+</div>
+
+<hr class="sep" />
+
+<h2 id="test">Test de la solution</h2> 
+<p>Pour tester nos configuration , nous allons modifier le fichier <code>/var/www/html/index.html</code> sur nos deux 
+  serveur par une page login , affichant le panier d'un utilisateur. Nous y avons ajouter une bannière qui nous affichera 
+  le nom du serveur ayant répondu a la requêtes. Nous allons utiliser les identifiants <code>alice:1234</code> 
+  et <code>mathias:5678</code>. Le fichier disponible sur : 
+</p>
+<div class="warn-box">
+  ⚠ les identifiant sont coder en dure dans le fichier index, cela présente des concequence en terme de securite. 
+</div>
+
+<p>
+  Je vais m'authentifier avec les identifiants <code>alice:1234</code>. Sur la banierre, nous 
+  verons <code>message de la bannière</code>.
+</p>
+  <div class="projet-cover-wrap">
+    <img src="../images/panieralice01.png" alt="" />
+  </div>
+
+  <p>
+    Stimulons une panne sur vm1 en le mettant hors service, ou en le redemarant.  
+  </p>
+  <div class="projet-cover-wrap">
+    <img src="../images/rebootsrv01.png" alt="" />
+  </div>
+
+  <p>
+    pendant qu'il est eteint, rechargons la page et nous verons le message sur la banniere n'est plus le meme. 
+  </p>
+  <div class="projet-cover-wrap">
+    <img src="../images/panieralice02.png" alt="" />
+  </div>
+
+  <p>
+    Nous allons profiter de l'accasion et se connecter avec les identifiants <code>mathias:5678</code>. rassurer vous 
+    que la banierre precise que vous etes bien sur vm2 , car vm1 est eteint.
+  </p>
+  <div class="projet-cover-wrap">
+    <img src="../images/paniermathias01.png" alt="" />
+  </div>
+
+  <p>
+    Une fois que vm1 est demarer, rechrger le navigateur et observer le changement. 
+  </p>
+  <div class="projet-cover-wrap">
+    <img src="../images/paniermathias02.png" alt="" />
+  </div>
+
+  <hr class="sep" />
+
+  <h2 id="limites">Perspectives</h2>
     <p>
-      Ce projet s'inscrit dans ma démarche globale d'apprentissage du pentest et du hacking éthique, 
-      en combinant compréhension théorique des attaques et implémentation pratique des outils.
-    </p>
+      la Replication des comptes utilisateurs est important. les donnees créer sur vm1 doivent également être répliquer 
+      sur vm2 (vice-versa). Pour cela il faut penser a utiliser <strong><u>Lsyncd</u></strong> .
+    </p>  
+    <ul>
+      <li>Synchronisation symétrique des de la base de donnee entre vm1 et vm2.</li>
+      <li>Mise en place de la réplication des données utilisateurs entre vm1 et vm2</li>
+      <li>Synchronisation des bases de données en mode actif-actif ou actif-passif</li>
+      <li>Synchronisation symétrique des fichiers applicatifs (ex : articles, images produits)</li>
+    </ul>
 
     <!-- Navigation bas de page -->
     <div class="projet-footer-nav">
       <a href="../index.html#projets" class="btn-back">
         <i class="bi bi-arrow-left"></i> Retour aux projets
       </a>
-      <a href="projet2.html" class="btn-next">
+      <a href="projet5.html" class="btn-next">
         Projet suivant <i class="bi bi-arrow-right"></i>
       </a>
     </div>

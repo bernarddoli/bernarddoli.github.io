@@ -61,22 +61,18 @@
     <p class="projet-toc-title">Sommaire</p>
     <ul id="toc-list">
       <li><a href="#introduction">Introduction</a></li>
-      <li><a href="#contexte">Contexte & Objectifs</a></li>
       <li><a href="#fonctionnement">Fonctionnement</a></li>
       <li class="toc-sub"><a href="#architecture">Architecture de la solution</a></li>
       <li><a href="#implementation">Implementation technique</a></li>
       <li class="toc-sub"><a href="#prerequis">Prérequis sur les deux serveurs</a></li>
-      <li class="toc-sub"><a href="#authentification">Authentification SSH sans mot de passe</a></li>
       <li class="toc-sub"><a href="#conectivite">Test de connectivé entre Server1 vers Server2</a></li>
       <li class="toc-sub"><a href="#repertoire">Repertoires de synchronisation</a></li>
       <li class="toc-sub"><a href="#testManuel">Test de synchronisation manuel</a></li>
       <li class="toc-sub"><a href="#configuration">Configuration lsyncd sur le server1</a></li>
       <li class="toc-sub"><a href="#DemarrerService">Démarrer et activer lsyncd</a></li>
-      <li><a href="#resultats">Résultats & Tests</a></li>
       <li><a href="#limites">Perspectives</a></li>
       <li class="toc-sub"><a href="#deuxSource">Deux sources vers une destionation</a></li>
       <li class="toc-sub"><a href="#plusieursServeurs">une source vers plusieurs serveurs distant</a></li>
-      <li><a href="#conclusion">Conclusion</a></li>
     </ul>
   </aside>
 
@@ -98,23 +94,6 @@
 
     <hr class="sep" />
 
-    <h2 id="contexte">Contexte & Objectifs</h2>
-    <p>
-      Dans le cadre de ma formation, j’ai souhaité mettre en pratique des mécanismes de synchronisation et de 
-      disponibilité des données en environnement Linux. Pour cela, j’ai mis en œuvre une solution basée sur Lsyncd
-      (Live Syncing Daemon), permettant d’assurer la réplication automatique de fichiers entre plusieurs systèmes. Les 
-      objectifs principaux étaient :
-    </p>
-    <ul>
-      <li>Comprendre le fonctionnement de la synchronisation en temps réel</li>
-      <li>Mettre en place une solution automatisée de mise en miroir de données avec Lsyncd</li>
-      <li>Garantir la cohérence et l’intégrité des fichiers entre un serveur source et un serveur distant</li>
-      <li>Renforcer la disponibilité des données dans un contexte de continuité de service</li>
-      <li>Appliquer de bonnes pratiques de sécurisation des transferts (via SSH, permissions, etc.)</li>
-    </ul>
-
-    <hr class="sep" />
-
     <h2 id="fonctionnement">Fonctionnement</h2>
     <p>
       Lsyncd (Live Syncing Daemon) est un outil de synchronisation de fichiers en temps réel qui repose sur un
@@ -126,6 +105,8 @@
       <li>Lorsqu’un fichier est créé, modifié ou supprimé, un événement est détecté</li>
       <li>Lsyncd déclenche ensuite une commande de synchronisation (souvent via rsync)</li>
       <li>Les fichiers sont alors répliqués vers un serveur distant ou un autre répertoire local</li>
+      <li>Garantie la cohérence et l’intégrité des fichiers entre un serveur source et un serveur distant</li>
+      <li>Renforce la disponibilité des données dans un contexte de continuité de service</li>
     </ul>
 
     <h3 id="architecture">Architecture de la solution</h3>
@@ -156,7 +137,8 @@
 <span class="c-keyword">apt install rsync</span> lsyncd -y
 <span class="c-comment"># mise à jour du système et installations</span></code></pre>
 
-    <h3 id="authentification">Authentification SSH sans mot de passe</h3> 
+    <div class="info-box"><strong>Authentification SSH sans mot de passe</strong></div>
+
     <p>Sur le Serveur source (Server1), généré une clé SSH. Cette clé sera utilise afin d'assurer une 
       synchronisation sécurisée. Nous n'utiliserons pas de passphrase. Le passphrase nécessitera la presence 
       d'un utilisateur pendant l’établissement de la connexion distante avant la synchronisation.
@@ -283,26 +265,6 @@
 <span class="c-comment"># Vérifier le statut</span>
 <span class="c-keyword">systemctl status lsyncd</span></code></pre>
 
-
-
-    <hr class="sep" />
-
-    <h2 id="resultats">Résultats</h2>
-    <p>
-      Les tests ont été effectués sur une machine virtuelle Kali Linux, 
-      avec une liste de hashes <code>MD5</code> générés localement à partir de mots de passe connus.
-
-      Une fois le daemon lsyncd démarré sur les serveurs, toute modification détectée dans les répertoires 
-      <code>demo1</code> et <code>demo2</code> sera automatiquement synchronisée vers <code>rep-sync1</code> et
-      <code>rep-sync2</code> en temps réel.
-    </p>
-    <!-- <div class="info-box">
-      <strong>Conclusion des tests :</strong> Un mot de passe d'au moins 12 caractères combinant 
-      majuscules, minuscules, chiffres et symboles résiste efficacement à toutes les attaques testées. 
-      L'usage d'un gestionnaire comme <strong>KeePass</strong> est fortement recommandé.
-    </div> -->
-
-
     <hr class="sep" />
 
     <h2 id="limites">Perspectives</h2>
@@ -416,33 +378,10 @@
     ├──► 192.168.100.228 /home/user4/ - Server4
     └──► 192.168.100.229 /home/user5/ - Server5</code></pre>
 
-
 <div class="warn-box">
-  <strong>⚠ NE PAS OUBLIER :</strong>La clé SSH doit être copiée sur chacune des 4 machines. On poura utiliser la 
-  methode precdente pour les differentes operations de copies. Tester la connexion de server1 vers Server{3,4,5}.
+  <strong>⚠ NE PAS OUBLIER :</strong>La clé SSH doit être copiée sur chacune des 4 machines. On pourra utiliser la 
+  methode précédente pour les differentes operations de copies. Tester la connexion de server1 vers Server{3,4,5}.
 </div>
-
-    <ul>
-      <li>Performance limitée en Python pur — pas d'accélération GPU</li>
-      <li>Fonctionne uniquement sur des hashes non salés (<code>MD5</code>, <code>SHA1</code>)</li>
-      <li>Wordlists limitées en taille pour des raisons d'espace disque</li>
-      <li>Usage <strong>strictement réservé</strong> aux tests sur ses propres systèmes</li>
-    </ul>
-
-    <hr class="sep" />
-
-    <h2 id="conclusion">Conclusion</h2>
-    <p>
-      Ce projet m'a permis de comprendre concrètement les mécanismes d'attaque sur les mots de passe 
-      et l'importance de politiques de sécurité rigoureuses. Il illustre parfaitement pourquoi 
-      l'utilisation d'un gestionnaire de mots de passe comme <strong>KeePass</strong> et 
-      l'adoption d'une politique de mots de passe forts sont indispensables dans tout 
-      environnement professionnel ou personnel.
-    </p>
-    <p>
-      Ce projet s'inscrit dans ma démarche globale d'apprentissage du pentest et du hacking éthique, 
-      en combinant compréhension théorique des attaques et implémentation pratique des outils.
-    </p>
 
     <!-- Navigation bas de page -->
     <div class="projet-footer-nav">

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Serveur miroir - DOLI B. Bernard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/projet.css"/>
+</head>
+<body>
+
+<!-- ======= NAV ======= -->
+<nav id="navbar">
+  <ul>
+    <li><a href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+    <li><a href="../index.html#competences"><i class="fas fa-code"></i> Compétences</a></li>
+    <li><a href="../index.html#projets"><i class="fas fa-folder-open"></i> Projets</a></li>
+    <li><a href="../index.html#parcours"><i class="fas fa-briefcase"></i> Parcours</a></li>
+    <li><a href="../index.html#contact"><i class="fas fa-envelope"></i> Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ======= HERO DARK ======= -->
+<header class="projet-hero">
+  <div class="inner">
+    <p class="projet-breadcrumb">
+      <a href="../index.html">Accueil</a>
+      <span>›</span>
+      <a href="../index.html#projets">Projets</a>
+      <span>›</span>
+      Serveur miroir - APT cache proxy
+    </p>
+    <h1>Serveur miroir - APT cache proxy</h1>
+    <div class="projet-meta">
+      <span class="projet-tag">système</span>
+      <span class="projet-tag">sécurité</span>
+    </div>
+  </div>
+
+  <!-- Image de couverture collée au bas du hero -->
+  <div class="projet-cover-wrap">
+    <img src="../images/apt-cacher.png" alt="Casseur de mots de passe" />
+  </div>
+</header>
+
+<!-- ======= CORPS : sommaire + article ======= -->
+<div class="projet-body">
+
+  <!-- SOMMAIRE GAUCHE -->
+  <aside class="projet-toc">
+    <p class="projet-toc-title">Sommaire</p>
+    <ul id="toc-list">
+      <li><a href="#introduction">Introduction</a></li>
+      <li><a href="#fonctionnement">Fonctionnement</a></li>
+      <li><a href="#solution">Solutions existantes</a></li>
+      <li class="toc-sub"><a href="#apt-cacher-ng">apt-cacher-ng</a></li>
+      <li class="toc-sub"><a href="#apt-mirror">apt-mirror</a></li>
+      <li class="toc-sub"><a href="#Squid">Squid</a></li>
+      <li><a href="#implementation">Implementation</a></li>
+      <li><a href="#resultats">Test de la solution</a></li>
+      <li class="toc-sub"><a href="#testvm1">Test sur vm1</a></li>
+      <li class="toc-sub"><a href="#testvm2">Test sur vm2</a></li>
+      <li><a href="#conclusion">Conclusion</a></li>
+    </ul>
+  </aside>
+
+  <!-- CONTENU ARTICLE -->
+  <article class="projet-content">
+
+    <h2 id="introduction">Introduction</h2>
+    <p>
+      Imaginons un parc de 100 machines Debian/Ubuntu, chaque machine fait des mise à jour, install des services. Toutes 
+      téléchargent (presque) les mêmes paquets depuis Internet. cela consomme : <u>bande passante, temps, ressources 
+      réseau</u> de l’entreprise.
+    </p>
+    <p>
+      Comme solution, on peut mettre en place une machine <strong>(serveur miroir / cache APT)</strong> connectée à Internet 
+      qui télécharge les <strong>mises à jour</strong> et les <strong>paquets</strong> puis les partage aux autres.
+    </p>
+
+    <hr class="sep" />
+
+    <h2 id="fonctionnement">Fonctionnement</h2>
+    <p>
+      Un <strong>serveur miroir</strong> est une solution proxy de mise en cache des paquets. À travers ce proxy, 
+      un ensemble d'ordinateurs clients accède indirectement aux dépôts.
+    </p>
+    <p>  
+      Quand un paquet est demandé pour la première fois, il est téléchargé par le proxy et transmis au client tout en 
+      conservant une copie en local. Pour toute future demande du même paquet, le proxy ne télécharge pas les paquets 
+      mais transmet la copie locale. Ainsi, on économise la bande passante externe et du temps pour les clients.
+    </p>
+
+    <div class="info-box"><strong>Architecture du reseau</strong></div>
+    <p>
+      Nous allons pour la suite utiliser le reseau 192.168.xx.0/24.
+    </p>
+<pre><code>+-------+
+| SRV01	|
+| .100	|----+
++-------+    |
+	     |
++-------+    |
+| SRV02	|    |
+| .100	|----|	+---------+			  +----------------+
++-------+    |	|  SRV	  |	+----------+	  |    INTERNET	   |
+	     +--+ MIROIR  |<--->| PARE-FEU |<---->|        \	   |
++-------+    |	| .100	  |	+----------+	  | DEPOT OFFICIEL |
+| SRV01	|    |	+---------+			  +----------------+
+| .100	|----+
++-------+    |
+	     |
++-------+    |
+| SRV02	|    |
+| .100	|----+
++-------+</code></pre>
+
+  
+  <hr class="sep" />
+
+  <h2 id="solution">Solutions existantes</h2>
+  <p>
+    Plusieurs solutions de mise en cache ou de miroir de dépôts peuvent être mises en place afin de centraliser et 
+    mutualiser le téléchargement des paquets.
+  </p>
+
+  <h3 id="apt-cacher-ng">apt-cacher-ng</h3>
+  <p>
+    apt-cacher-ng est un proxy de cache dédié aux paquets APT. Une machine joue le rôle de serveur intermédiaire et 
+    toutes les requêtes de mise à jour des clients passent par elle. Elle télécharge une seule fois les paquets 
+    depuis les dépôts officiels, puis les stocke localement. Les autres machines du réseau réutilisent ensuite ce cache.
+  </p>
+
+  <h3 id="apt-mirror">apt-mirror</h3>
+  <p>
+    Il clone tout le dépôt en local (lourd : 50–200 Go). Utile si le réseau local est coupé d'internet pendant longtemps. 
+    Les clients sont ensuite configurés pour utiliser ce miroir interne comme source principale de paquets. 
+    Cette approche est plus lourde en termes de stockage et de synchronisation.
+  </p>
+
+  <h3 id="Squid">Squid</h3>
+  <p>
+    Squid est un proxy réseau généraliste utilisé pour le filtrage et la mise en cache des requêtes HTTP et HTTPS. Il 
+    peut également servir à accélérer les mises à jour APT en mettant en cache les paquets téléchargés. Cependant, 
+    il n’est pas spécifiquement conçu pour la gestion des dépôts Linux, ce qui le rend moins spécialisé qu’Apt-Cacher-NG
+  </p>
+
+    <hr class="sep" />
+
+    <h2 id="implementation">Implementation</h2>
+    <p>Nous allons installer apt-cacher-ng, parce qu'il est legé et moins gourmand en ressources comparativement a 
+      apt-miroir. L'installation se fera uniquement sur le serveur miroir.
+    </p>
+<pre><code><span class="c-keyword">apt install</span> apt-cacher-ng -y</code></pre>
+
+<p>
+  Une fois l'installation terminée, apt-cacher-ng démarrera automatiquement. Ouvrez et modifiez ensuite le fichier de 
+  configuration de cache-ng situé dans le répertoire <code>/etc/apt-cacher-ng</code>. Les fichiers importants sont <code>acng.conf</code>
+  et <code>security.conf</code>.
+</p>
+
+<div class="info-box"><strong>acng.conf</strong>
+  <p>
+    Le fichier <code>/etc/apt-cacher-ng/acng.conf</code> centralise la configuration d'Apt-Cacher-NG. Il permet notamment de définir 
+    le répertoire du cache <code>(CacheDir)</code>, le répertoire des journaux <code>(LogDir)</code>, le port d'écoute et d'administration 
+    <code>(3142 par défaut)</code>, les dépôts pris en charge, la page de statistiques <code>acng-report.html</code>, ainsi que les règles 
+    d'exclusion du cache via la directive <code>DontCache</code>.
+  </p>
+</div>
+
+<div class="info-box"><strong>security.conf</strong>
+  <p>
+    Le second fichier, <code>security.conf</code>, permet de définir les identifiants d'accès à la page d'administration 
+    au format AdminAuth: username:password, par exemple <code>AdminAuth: admin:Mir0r@dminS3cr3t</code>, ainsi que les 
+    restrictions d'accès par adresse IP au format <code>allowed: adresse_ip</code> ou <code>allowed: adresse_ip adresse_ip</code> 
+    pour une ou plusieurs adresses IP, et <code>allowed: adresse/masque</code> ou <code>allowed: adresse/masque adresse/masque</code> 
+    pour une ou plusieurs plages.
+  </p>
+</div>
+
+<p>
+  nous allons, juste initialiser la variables AdminAuth, puis appliquer les modification en demarant le service.
+</p>
+<pre><code><span class="c-keyword">systemctl enable</span> --now apt-cacher-ng
+<span class="c-keyword">systemctl restart</span> apt-cacher-ng</code></pre>
+
+  <hr class="sep" />
+
+
+    <h2 id="resultats">Test de la solution</h2>
+    <p>
+      Pour tester notre solution nous avons, utiliser deux machines. Mais si vous disposez de d'assez d'espace pour creer 
+      plus de vm n’hésitez pas. Sur chacun des vm, il faut creer le fichier <code>/etc/apt/apt.conf.d/00proxy</code> avec 
+      le contenu suivant :
+    </p>
+<pre><code><span class="c-comment"><span class="c-comment"># Remplacer "192.168.100.140" par l'adrresse IP de votre serveur miroir</span>
+<span class="c-keyword">Acquire::http::Proxy "http://192.168.100.140:3142";</span></code></pre>
+
+  <p>
+    Pour vérifier que la solution fonctionne, nous allons nous appuyer sur deux facteurs : la
+    <strong>taille des données transférées</strong> et le <strong>temps d'exécution</strong>.
+  </p>
+
+  <h3 id="testvm1">Test sur vm1</h3>
+  <p>
+    Sur la vm1 nous allons executer la commande <code>time apt install -y nginx mariadb-server postgresql redis-server docker.io build-essential</code>. 
+    Puis verifier la taille de donnee téléchargée et le temps écoulé. 
+  </p>
+
+  <p>
+    <code>time</code> est une commande qui mesure le temps d'exécution d'une autre commande. Exemple de sortie :
+  </p>
+  <ul>
+      <li><strong>real :</strong>le temps total écoulé, c'est celui qui nous intéresse pour la démo.</li>
+      <li><strong>user :</strong>temps CPU passé dans le code de l'application elle-même.</li>
+      <li><strong>sys :</strong>temps CPU passé dans les appels système (lecture disque, réseau, etc.)</li>
+  </ul> 
+
+  <p> <strong>Taille de donnee téléchargée</strong> </p>
+  <div class="projet-cover-wrap">
+    <img src="../images/data1.png" alt="Taille01" />
+  </div>
+  <p> <strong>Temps mis pour l'execution</strong> </p>
+  <div class="projet-cover-wrap">
+    <img src="../images/time1.png" alt="Temps01" />
+  </div>
+  <p>
+    <code>Data fetched (153 MiB)</code> correspond a ce que le serveur miroir a téléchargé depuis internet, 
+    <code>Data served (153 MiB)</code> ce qu'il a servi aux clients avec un temps d'execution de <code>08 minutes, 54,046 secondes</code>.
+  </p>
+  <div class="info-box">
+    la commande <code>time apt install -y nginx .....</code> précédente, est la toute premiere commande exécutée par le 
+    serveur miroir. Il a téléchargé depuis internet 153 MiB (Data fetched). vm1 est la seule ayant demande cette ressources
+    d'où 153 MiB (Data served, servi a vm1).
+  </div>
+
+  <p>
+    Pour avoir le détail (hits/misses), Clique sur le bouton <code>Count Data</code>. Cela analysera le fichier de log et 
+    donnera le détail :
+    <ul>
+      <li>Hits : requêtes servies depuis le cache (pas de téléchargement internet)</li>
+      <li>Misses : requêtes qui ont nécessité un téléchargement depuis internet</li>
+      <li>Total : somme des deux</li>
+    </ul>
+    Plus le ratio hits/total est élevé, plus le cache est efficace pour ton parc de machines.
+  </p> 
+  <div class="info-box">
+    Le <code>Hits = 0</code> signifie qu'aucune donne n'a ete servie par le cache.
+  </div>
+
+  <h3 id="testvm2">Test sur vm2</h3>
+  <p>
+    Sur la vm2 nous allons executer la meme commande <code>time apt install -y nginx mariadb-server postgresql redis-server docker.io build-essential</code>. 
+  </p>
+  <p> <strong>Taille de donnee téléchargée</strong> </p>
+  <div class="projet-cover-wrap">
+    <img src="../images/data2.png" alt="Taille01" />
+  </div>
+  <p> <strong>Temps mis pour l'execution</strong> </p>
+  <div class="projet-cover-wrap">
+    <img src="../images/time2.png" alt="Temps01" />
+  </div>
+  <p>
+    <code>Data fetched (153 MiB)</code> n'a pas changee, parce que le serveur n'a rien téléchargé de nouveau. 
+    <code>Data served</code> est passee a <strong>306 MiB</strong>. En plus des 153 MiB servi a vm1 lors de la requette 
+    précédente, le serveur miroir a servi 153 MiB a vm2, d'où 153 MiB + 153 MiB. Le temps d'execution reduit a 
+    <code>03 minutes, 3,904 secondes</code>. Le <code>Hits = 88</code> requêtes servies depuis le cache.
+  </p>
+
+    <hr class="sep" />
+
+    <h2 id="conclusion">Conclusion</h2>
+    <p>
+      Ce projet a permis de mettre en place et de valider concrètement une solution de cache centralisé pour la gestion 
+      des mises à jour APT. La configuration d'apt-cacher-ng sur une machine dédiée, a démontré son efficacité dès les
+      premiers tests : le dashboard de monitoring a confirmé un volume de données servies aux clients, supérieur au volume 
+      réellement téléchargé depuis internet, preuve tangible que le cache réduit la consommation de bande passante externe.
+    </p>
+    <p>
+      Les tests réalisés sur deux machines virtuelles, avec mesure du temps d'exécution via la commande <code>time</code>, 
+      ont permis d'objectiver le gain de performance. La première installation, nécessitant un téléchargement complet 
+      depuis les dépôts officiels, s'est révélée nettement plus lente que la seconde, servie directement depuis 
+      le cache local.
+    </p> 
+      
+
+    <!-- Navigation bas de page -->
+    <div class="projet-footer-nav">
+      <a href="../index.html#projets" class="btn-back">
+        <i class="bi bi-arrow-left"></i> Retour aux projets
+      </a>
+      <a href="projet5.html" class="btn-next">
+        Projet suivant <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+  </article>
+</div>
+
+<!-- ======= FOOTER ======= -->
+<footer>
+  <div class="footer-icon">
+    <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" alt="cybersécurité icon"/>
+  </div>
+  <p class="footer-main">
+    Conçu &amp; développé par <span>DOLI B. Bernard</span> — 
+    Ingénieur Cybersécurité | Pentester | Investigateur numérique
+  </p>
+  <p class="footer-sub">Sécuriser aujourd'hui, protéger demain</p>
+</footer>
+
+<!-- Sommaire actif au scroll -->
+<script>
+  const links = document.querySelectorAll('#toc-list a');
+  const ids = Array.from(links).map(a => a.getAttribute('href').slice(1));
+  const sections = ids.map(id => document.getElementById(id)).filter(Boolean);
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        const a = document.querySelector(`#toc-list a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+
+  sections.forEach(s => obs.observe(s));
+</script>
+
+</body>
+</html>
